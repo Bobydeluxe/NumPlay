@@ -1,0 +1,39 @@
+{
+  "game": "Super Mario Bros. (NES, NTSC)",
+  "creator": "Nintendo",
+  "adapter": "Bobydeluxe",
+  "reference_pages": [
+    "https://www.mariowiki.com/Super_Mario_Bros.",
+    "https://www.mariowiki.com/Category:Super_Mario_Bros._assets"
+  ],
+  "sources": {
+    "core": {
+      "repo": "https://github.com/nukep/SMB-Vanilla",
+      "commit": "20f4e02614412f9dbd407dd4e4fab4ade5eb79da",
+      "license": "GPL-3.0"
+    },
+    "tables": {
+      "repo": "https://github.com/MitchellSternke/SuperMarioBros-C",
+      "commit": "5bb920506a869cdc1fe2ef888a6526a1cf991630",
+      "path": "docs/smbdis.asm",
+      "author": "doppelganger"
+    },
+    "patterns": {
+      "repo": "https://github.com/threecreepio/smb-glitchedworlds",
+      "commit": "0e1bfca69b793cfcecee8709fb699fecf90e1c03",
+      "path": "smb.chr"
+    },
+    "replay": {
+      "repo": "https://github.com/nathsou/smb",
+      "commit": "6ba857f2d7f43371983d21a04de7025b05ec2513",
+      "path": "rec/warpless.rec",
+      "note": "1-1 to 1-3 inputs from HappyLee and Mars608, TASVideos #3728; remaining inputs by the upstream project"
+    }
+  },
+  "files": {
+    "patterns.chr": "6ae7ffd9795d670954b76c19706d4f355b53f49c38a1da14027faee2c9266f10",
+    "small-mario.png": "85a364afe2fbba16070fcf5c6a72011254952693eac3930879c5b51b87fb87ca",
+    "symbols.json": "5fa65ef63326c2a1eca42a73c55f4c0ce6512ab8395404d0beb5111a015ea5e2",
+    "tables.bin": "5374abb64cfb9b5d961856c60166cedc55859164cf2b8867730e144fa2bdd594"
+  }
+}

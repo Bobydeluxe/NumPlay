@@ -75,6 +75,9 @@ jobs:
           make -C games/sudoku host test
           make -C games/uttt host test
           make -C games/sokoban host test
+          make -C games/supermariobros check test replay fidelity NWLINK=nwlink
+          python3 games/supermariobros/tools/assets.py --check
+          python3 games/supermariobros/tests/arm.py --nwlink nwlink
 
 
 

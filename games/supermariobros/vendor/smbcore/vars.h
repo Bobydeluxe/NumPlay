@@ -1,0 +1,539 @@
+#ifndef SMBCORE_VARS_H
+#define SMBCORE_VARS_H
+
+// Note: None of the RAM or RAMARRAY declarations should overlap each other.
+// If aliasing occurs, refer to to an existing declaration.
+// TODO: Fix aliasing with the $0300 page. Many of the variables there overlap.
+
+
+// These are used largely to zero-out the memory in these regions
+
+#define VRAM_Page                        RAMARRAY(0x0300, 0x100)
+#define Objects_Page                     RAMARRAY(0x0400, 0x100)
+
+
+// Pointers
+// Note: The port accesses data using pointers stored elsewhere instead of the 16-bit values here,
+// but we still store the 16-bit 6502 pointers to support save states (for now).
+// These are pointers to ROM.
+
+#define AreaData_addr_lo                 RAM(0x00E7)
+#define AreaData_addr_hi                 RAM(0x00E8)
+#define EnemyData_addr_lo                RAM(0x00E9)
+#define EnemyData_addr_hi                RAM(0x00EA)
+#define MusicData_addr_lo                RAM(0x00F5)
+#define MusicData_addr_hi                RAM(0x00F6)
+
+
+// Temporary
+
+// This address is Mirror_PPU_CTRL_REG1 in SMB1,
+// but we're currently reusing it to act more like SMB2J's NameTableSelect
+// TODO - move this to a better place
+#define NameTableSelectSMB1             RAM(0x0778)
+
+
+/* common ----------------------- */
+#define FrameCounter                     RAM(0x0009)
+#define A_B_Buttons                      RAM(0x000A)
+#define Up_Down_Buttons                  RAM(0x000B)
+#define Left_Right_Buttons               RAM(0x000C)
+#define PreviousA_B_Buttons              RAM(0x000D)
+#define GameEngineSubroutine             RAM(0x000E)
+#define Enemy_Flag                       RAMARRAY(0x000F, 6+1)  // +1, because SpawnHammerObj regularly accesses Enemy_Flag[6].
+#define Enemy_ID                         RAMARRAY(0x0016, 6)
+#define Player_State                     RAM(0x001D)
+#define Enemy_State                      RAMARRAY(0x001E, 6)
+#define Fireball_State                   RAMARRAY(0x0024, 2)
+#define Block_State                      RAMARRAY(0x0026, 2)
+#define Misc_State                       RAMARRAY(0x002A, 9)
+#define PlayerFacingDir                  RAM(0x0033)
+#define FirebarSpinDirection             RAMARRAY(0x0034, 5)
+
+// reuses memory
+#define VictoryDestPageLoc               FirebarSpinDirection[0]
+#define VictoryWalkControl               FirebarSpinDirection[1]
+
+#define PowerUpType                      RAM(0x0039)
+#define FireballBouncingFlag             RAMARRAY_bool(0x003A, 2)
+#define HammerBroJumpTimer               RAMARRAY(0x003C, 6)	// as many as Enemy_ID
+#define Player_MovingDir                 RAM(0x0045)
+#define Enemy_MovingDir                  RAMARRAY(0x0046, 6)	// as many as Enemy_ID
+
+#define SprObject_X_Speed                RAMARRAY_i8(0x0057, 22)
+#define Player_X_Speed                   SprObject_X_Speed[0]
+#define Enemy_X_Speed                    (SprObject_X_Speed + 1)
+#define Fireball_X_Speed                 (SprObject_X_Speed + 7)
+#define Block_X_Speed                    (SprObject_X_Speed + 9)
+#define Misc_X_Speed                     (SprObject_X_Speed + 13)
+
+// temporary, just so it doesn't inherit the signedness of Enemy_X_Speed
+#define Unsigned_0x58                    RAMARRAY(0x0058, 21)
+
+#define BlooperMoveSpeed                 Enemy_X_Speed
+#define CheepCheepMoveMFlag              Unsigned_0x58
+#define ExplosionGfxCounter              Unsigned_0x58
+#define FirebarSpinState_Low             Unsigned_0x58
+#define Jumpspring_FixedYPos             Unsigned_0x58
+#define LakituMoveSpeed                  Enemy_X_Speed
+#define PiranhaPlant_Y_Speed             Enemy_X_Speed
+#define RedPTroopaCenterYPos             Unsigned_0x58
+#define XMoveSecondaryCounter            Unsigned_0x58
+#define YPlatformCenterYPos              Unsigned_0x58
+
+#define SprObject_PageLoc                RAMARRAY(0x006D, 25)	// 3 more, because of bubbles
+#define Player_PageLoc                   SprObject_PageLoc[0]
+#define Enemy_PageLoc                    (SprObject_PageLoc + 1)
+#define Fireball_PageLoc                 (SprObject_PageLoc + 7)
+#define Block_PageLoc                    (SprObject_PageLoc + 9)
+#define Misc_PageLoc                     (SprObject_PageLoc + 13)
+#define Bubble_PageLoc                   (SprObject_PageLoc + 22)
+
+#define SprObject_X_Position             RAMARRAY(0x0086, 25)	// 3 more, because of bubbles
+#define Player_X_Position                SprObject_X_Position[0]
+#define Enemy_X_Position                 (SprObject_X_Position + 1)
+#define Fireball_X_Position              (SprObject_X_Position + 7)
+#define Block_X_Position                 (SprObject_X_Position + 9)
+#define Misc_X_Position                  (SprObject_X_Position + 13)
+#define Bubble_X_Position                (SprObject_X_Position + 22)
+
+#define SprObject_Y_Speed                RAMARRAY_i8(0x009F, 22)
+#define Player_Y_Speed                   SprObject_Y_Speed[0]
+#define Enemy_Y_Speed                    (SprObject_Y_Speed + 1)
+#define Fireball_Y_Speed                 (SprObject_Y_Speed + 7)
+#define Block_Y_Speed                    (SprObject_Y_Speed + 9)
+#define Misc_Y_Speed                     (SprObject_Y_Speed + 13)
+
+// temporary, just so it doesn't inherit the signedness of Enemy_Y_Speed
+#define Unsigned_0xA0                    RAMARRAY(0x00A0, 21)
+
+#define BlooperMoveCounter               Unsigned_0xA0
+#define ExplosionTimerCounter            Unsigned_0xA0
+#define FirebarSpinState_High            Unsigned_0xA0
+#define LakituMoveDirection              Unsigned_0xA0
+#define PiranhaPlant_MoveFlag            Unsigned_0xA0
+#define XMovePrimaryCounter              Unsigned_0xA0
+
+#define SprObject_Y_HighPos              RAMARRAY(0x00B5, 25)	// 3 more, because of bubbles
+#define Player_Y_HighPos                 SprObject_Y_HighPos[0]
+#define Enemy_Y_HighPos                  (SprObject_Y_HighPos + 1)
+#define Fireball_Y_HighPos               (SprObject_Y_HighPos + 7)
+#define Block_Y_HighPos                  (SprObject_Y_HighPos + 9)
+#define Misc_Y_HighPos                   (SprObject_Y_HighPos + 13)
+#define Bubble_Y_HighPos                 (SprObject_Y_HighPos + 22)
+
+#define SprObject_Y_Position             RAMARRAY(0x00CE, 25)	// 3 more, because of bubbles
+#define Player_Y_Position                SprObject_Y_Position[0]
+#define Enemy_Y_Position                 (SprObject_Y_Position + 1)
+#define Fireball_Y_Position              (SprObject_Y_Position + 7)
+#define Block_Y_Position                 (SprObject_Y_Position + 9)
+#define Misc_Y_Position                  (SprObject_Y_Position + 13)
+#define Bubble_Y_Position                (SprObject_Y_Position + 22)
+
+// rEF is a temporary variable, but is used in Setup_Vine due to a glitch
+#define rEF                              RAM(0x00EF)
+
+#define NoteLenLookupTblOfs              RAM(0x00F0)
+#define Square1SoundBuffer               RAM(0x00F1)
+#define Square2SoundBuffer               RAM(0x00F2)
+#define NoiseSoundBuffer                 RAM(0x00F3)
+#define AreaMusicBuffer                  RAM(0x00F4)
+#define MusicOffset_Square2              RAM(0x00F7)
+#define MusicOffset_Square1              RAM(0x00F8)
+#define MusicOffset_Triangle             RAM(0x00F9)
+#define PauseSoundQueue                  RAM(0x00FA)
+#define AreaMusicQueue                   RAM(0x00FB)
+#define EventMusicQueue                  RAM(0x00FC)
+#define NoiseSoundQueue                  RAM(0x00FD)
+#define Square2SoundQueue                RAM(0x00FE)
+#define Square1SoundQueue                RAM(0x00FF)
+#define VerticalFlipFlag                 RAM(0x0109)
+#define FlagpoleFNum_Y_Pos               RAM(0x010D)
+#define FlagpoleFNum_YMFDummy            RAM(0x010E)
+#define FlagpoleScore                    RAM(0x010F)
+
+#define FloateyNum_Control               RAMARRAY(0x0110, 7)
+#define FloateyNum_X_Pos                 RAMARRAY(0x0117, 7)
+#define FloateyNum_Y_Pos                 RAMARRAY(0x011E, 7)
+#define ShellChainCounter                RAMARRAY(0x0125, 7)
+#define FloateyNum_Timer                 RAMARRAY(0x012C, 7)
+
+#define DigitModifier_Minus1             RAMARRAY(0x0133, 7)
+#define DigitModifier                    (DigitModifier_Minus1 + 1)
+
+#define Sprite_Data                      RAMARRAY(0x0200, 0x100)
+
+// There's a lot of ugly aliasing (overlapping) with VRAM here...
+
+#define VRAM_Data1                       RAMARRAY(0x0300, 0x63)
+#define VRAM_Data2                       RAMARRAY(0x0340, 0xC0)
+
+// Note: crosses into $0400 and a bunch of other variables.
+// This should be of little consequence, because memory is cleared before starting new areas.
+// However, it's not cleared before starting the demo, so it might affect that... maybe.
+#define VRAM_SMB1_TitleScreen            RAMARRAY(0x0300, 0x13A)
+
+#define VRAM_Buffer1_Offset              VRAM_Data1[0]
+#define VRAM_Buffer1                     (VRAM_Data1 + 1)
+#define VRAM_Buffer2_Offset              VRAM_Data2[0]
+
+// This is accessed exclusively by the area subroutines.
+// Writes might overwrite the other variables below on level start,
+// but a page clear happens afterwards on SecondaryGameSetup
+#define VRAM_Buffer2                     (VRAM_Data2 + 1)
+
+#define BowserBodyControls               RAM(0x0363)
+#define BowserFeetCounter                RAM(0x0364)
+#define BowserMovementSpeed              RAM_i8(0x0365)
+#define BowserOrigXPos                   RAM(0x0366)
+#define BowserFlameTimerCtrl             RAM(0x0367)
+#define BowserFront_Offset               RAM(0x0368)
+#define BridgeCollapseOffset             RAM(0x0369)
+#define BowserGfxFlag                    RAM(0x036A)
+#define FirebarSpinSpeed                 RAMARRAY_i8(0x0388, 5)
+#define VineFlagOffset                   RAM(0x0398)
+#define VineHeight                       RAM(0x0399)
+#define VineObjOffset                    RAMARRAY(0x039A, 2)
+#define VineStart_Y_Position             RAM(0x039D)
+#define BalPlatformAlignment             RAM_i8(0x03A0)
+#define Platform_X_Scroll                RAM_i8(0x03A1)
+
+#define PlatformCollisionFlag            RAMARRAY(0x03A2, 5)
+
+// reuses memory
+#define HammerThrowingTimer PlatformCollisionFlag
+
+#define SprObject_Rel_XPos               RAMARRAY(0x03AD, 7)
+#define Player_Rel_XPos                  SprObject_Rel_XPos[0]
+#define Enemy_Rel_XPos                   SprObject_Rel_XPos[1]
+#define Fireball_Rel_XPos                SprObject_Rel_XPos[2]
+#define Bubble_Rel_XPos                  SprObject_Rel_XPos[3]
+#define Block_Rel_XPos                   SprObject_Rel_XPos[4]
+#define Block_Rel_XPos_2                 SprObject_Rel_XPos[5]
+#define Misc_Rel_XPos                    SprObject_Rel_XPos[6]
+
+#define SprObject_Rel_YPos               RAMARRAY(0x03B8, 7)
+#define Player_Rel_YPos                  SprObject_Rel_YPos[0]
+#define Enemy_Rel_YPos                   SprObject_Rel_YPos[1]
+#define Fireball_Rel_YPos                SprObject_Rel_YPos[2]
+#define Bubble_Rel_YPos                  SprObject_Rel_YPos[3]
+#define Block_Rel_YPos                   SprObject_Rel_YPos[4]
+#define Block_Rel_YPos_2                 SprObject_Rel_YPos[5]
+#define Misc_Rel_YPos                    SprObject_Rel_YPos[6]
+
+#define SprObject_Attrib                 RAMARRAY(0x03C4, 7)
+#define Player_SprAttrib                 SprObject_Attrib[0]
+#define Enemy_SprAttrib                  (SprObject_Attrib + 1)
+
+#define Player_OffscreenBits             RAM(0x03D0)
+#define Enemy_OffscreenBits              RAM(0x03D1)
+#define FBall_OffscreenBits              RAM(0x03D2)
+#define Bubble_OffscreenBits             RAM(0x03D3)
+#define Block_OffscreenBits              RAM(0x03D4)
+//
+#define Misc_OffscreenBits               RAM(0x03D6)
+
+#define EnemyOffscrBitsMasked            RAMARRAY(0x03D8, 6)
+#define Block_Orig_YPos                  RAMARRAY(0x03E4, 2)
+#define Block_BBuf_Low                   RAMARRAY(0x03E6, 2)
+#define Block_Metatile                   RAMARRAY(0x03E8, 2)
+#define Block_PageLoc2                   RAMARRAY(0x03EA, 2)
+#define Block_RepFlag                    RAMARRAY(0x03EC, 2)
+#define BlockOffsetToggle                RAM_bool(0x03EE) // Called SprDataOffset_Ctrl in doppelganger disasm
+#define Block_ResidualCounter            RAM(0x03F0)
+#define Block_Orig_XPos                  RAMARRAY(0x03F1, 2)
+#define AttributeBuffer                  RAMARRAY(0x03F9, 7)
+
+#define SprObject_X_MoveForce            RAMARRAY_i8(0x0400, 22)
+
+#define Unsigned_0x401                   RAMARRAY(0x0401, 21)
+
+#define Enemy_X_MoveForce                (SprObject_X_MoveForce + 1)
+#define RedPTroopaOrigXPos               Unsigned_0x401
+#define YPlatformTopYPos                 Unsigned_0x401
+
+#define SprObject_YMF_Dummy              RAMARRAY(0x0416, 22)
+#define Player_YMF_Dummy   SprObject_YMF_Dummy[0]
+#define Enemy_YMF_Dummy                  (SprObject_YMF_Dummy + 1)
+
+// reuses memory
+#define BowserFlamePRandomOfs            Enemy_YMF_Dummy
+#define PiranhaPlantUpYPos               Enemy_YMF_Dummy
+
+#define Bubble_YMF_Dummy                 RAMARRAY(0x042C, 3)
+#define SprObject_Y_MoveForce            RAMARRAY_i8(0x0433, 22)
+#define Player_Y_MoveForce               SprObject_Y_MoveForce[0]
+#define Enemy_Y_MoveForce                (SprObject_Y_MoveForce + 1)
+#define Block_Y_MoveForce                (SprObject_Y_MoveForce + 9)
+
+// reuses memory
+#define Unsigned_0x434                   RAMARRAY(0x0434, 21)
+#define CheepCheepOrigYPos               Unsigned_0x434
+#define PiranhaPlantDownYPos             Unsigned_0x434
+
+#define MaximumLeftSpeed                 RAM_i8(0x0450)
+#define MaximumRightSpeed                RAM_i8(0x0456)
+
+#define Cannon_Or_Whirlpool_Offset       RAM(0x046A)
+#define Cannon_PageLoc                   RAMARRAY(0x046B, 6)
+#define Cannon_X_Position                RAMARRAY(0x0471, 6)
+#define Cannon_Y_Position                RAMARRAY(0x0477, 6)
+#define Cannon_Timer                     RAMARRAY(0x047D, 6)
+
+// the whirlpools reuse memory from the cannons (or vice-versa)
+#define Whirlpool_PageLoc                Cannon_PageLoc
+#define Whirlpool_X_Position             Cannon_X_Position
+#define Whirlpool_Length                 Cannon_Y_Position
+#define Whirlpool_Flag                   Cannon_Timer[0]
+
+#define BowserHitPoints                  RAM(0x0483)
+#define StompChainCounter                RAM(0x0484)
+#define Player_CollisionBits             RAM(0x0490)
+
+#define Enemy_CollisionBits              RAMARRAY(0x0491, 6)
+
+#define SprObj_BoundBoxCtrl              RAMARRAY(0x0499, 18)
+#define Player_BoundBoxCtrl              SprObj_BoundBoxCtrl[0]
+#define Enemy_BoundBoxCtrl               (SprObj_BoundBoxCtrl + 1)
+#define Fireball_BoundBoxCtrl            (SprObj_BoundBoxCtrl + 7)
+#define Misc_BoundBoxCtrl                (SprObj_BoundBoxCtrl + 9)
+
+#define BoundingBoxCoords                RAMARRAY(0x04AC, 21*4)
+
+#define Block_Buffers                    RAMARRAY(0x0500, 0x1A0)
+
+#define BlockBufferColumnPos             RAM(0x06A0)
+#define MetatileBuffer                   RAMARRAY(0x06A1, 13)       // note: this overflows rarely. but MetatileBuffer[13] is accessed in World 4-3 in this TAS: https://tasvideos.org/6913S
+#define HammerEnemyOffset                RAMARRAY(0x06AE, 9)
+#define JumpCoinMiscOffset               RAM(0x06B7)
+#define BrickCoinTimerFlag               RAM_bool(0x06BC)
+#define Misc_Collision_Flag              RAMARRAY_bool(0x06BE, 9)
+#define Unused_0x6C7                     RAMARRAY(0x06C7, 4)    // exists as an array to handle the get_metatile() overflow case
+#define EnemyFrenzyBuffer                RAM(0x06CB)
+#define SecondaryHardMode                RAM_bool(0x06CC)
+#define EnemyFrenzyQueue                 RAM(0x06CD)
+#define FireballCounter                  RAM(0x06CE)
+#define DuplicateObj_Offset              RAM(0x06CF)
+#define LakituReappearTimer              RAM(0x06D1)
+#define NumberofGroupEnemies             RAM(0x06D3)
+#define ColorRotateOffset                RAM(0x06D4)
+#define WarpZoneControl                  RAM(0x06D6)
+#define FireworksCounter                 RAM(0x06D7)
+#define MultiLoopCorrectCntr             RAM(0x06D9)
+#define MultiLoopPassCntr                RAM(0x06DA)
+#define JumpspringForce                  RAM_i8(0x06DB)
+#define MaxRangeFromOrigin               RAM(0x06DC)
+#define BitMFilter                       RAM(0x06DD)
+#define ChangeAreaTimer                  RAM(0x06DE)
+#define SprShuffleAmtOffset              RAM(0x06E0)
+
+#define SprShuffleAmt                    RAMARRAY(0x06E1, 3)
+
+#define SprDataOffset                    RAMARRAY(0x06E4, 24)
+#define Player_SprDataOffset             SprDataOffset[0]
+#define Enemy_SprDataOffset              (SprDataOffset + 1)
+#define Block_SprDataOffset              (SprDataOffset + 8)
+#define Alt_SprDataOffset                Block_SprDataOffset
+#define Bubble_SprDataOffset             (SprDataOffset + 10)
+#define FBall_SprDataOffset              (SprDataOffset + 13)
+#define Misc_SprDataOffset               (SprDataOffset + 15)
+
+#define SavedJoypadBits1                 RAM(0x06FC)
+#define SavedJoypadBits2                 RAM(0x06FD)
+#define Player_X_Scroll                  RAM_i8(0x06FF)
+#define Player_XSpeedAbsolute            RAM(0x0700)
+#define FrictionAdderHigh                RAM(0x0701)
+#define FrictionAdderLow                 RAM(0x0702)
+#define RunningSpeed                     RAM_i8(0x0703)
+#define SwimmingFlag                     RAM_bool(0x0704)
+#define Player_X_MoveForce               RAM_i8(0x0705)
+#define DiffToHaltJump                   RAM(0x0706)
+#define JumpOrigin_Y_HighPos             RAM(0x0707)
+#define JumpOrigin_Y_Position            RAM(0x0708)
+#define VerticalForce                    RAM(0x0709)
+#define VerticalForceDown                RAM(0x070A)
+#define PlayerChangeSizeFlag             RAM_bool(0x070B)
+#define PlayerAnimTimerSet               RAM(0x070C)
+#define PlayerAnimCtrl                   RAM(0x070D)
+#define JumpspringAnimCtrl               RAM(0x070E)
+#define FlagpoleCollisionYPos            RAM(0x070F)
+#define PlayerEntranceCtrl               RAM(0x0710)
+#define FireballThrowingTimer            RAM(0x0711)
+#define DeathMusicLoaded                 RAM_bool(0x0712)
+#define FlagpoleSoundQueue               RAM(0x0713)
+#define CrouchingFlag                    RAM(0x0714)  // behaves as a boolean. values are 0 and 4 in the original, and is tested for 0/non-0
+#define GameTimerSetting                 RAM(0x0715)
+#define DisableCollisionDet              RAM_bool(0x0716)
+#define DemoAction                       RAM(0x0717)
+#define DemoActionTimer                  RAM(0x0718)
+#define PrimaryMsgCounter                RAM(0x0719)
+
+// Sometimes screen-left can be negative. It's rare, but it happens.
+// World 5-3 in SMB2J loops back to the start of the level, which causes a negative screen-left.
+
+#define ScreenLeft_PageLoc               RAM(0x071A)
+#define ScreenRight_PageLoc              RAM(0x071B)
+#define ScreenLeft_X_Pos                 RAM(0x071C)
+#define ScreenRight_X_Pos                RAM(0x071D)
+
+#define ColumnSets                       RAM_i8(0x071E)
+#define AreaParserTaskNum                RAM(0x071F)
+#define CurrentNTAddr_High               RAM(0x0720)
+#define CurrentNTAddr_Low                RAM(0x0721)
+#define ScrollLock                       RAM(0x0723)
+#define CurrentPageLoc                   RAM(0x0725)
+#define CurrentColumnPos                 RAM(0x0726)
+#define TerrainControl                   RAM(0x0727)
+#define BackloadingFlag                  RAM_bool(0x0728)   // behaves as a boolean. values are many values (up to about 17) in the original, and is tested for 0/non-0
+#define AreaObjectPageLoc                RAM(0x072A)
+#define AreaObjectPageSel                RAM_bool(0x072B)
+#define AreaDataOffset                   RAM(0x072C)
+#define AreaObjOffsetBuffer              RAMARRAY(0x072D, 3)
+#define AreaObjectLength                 RAMARRAY(0x0730, 3)
+#define AreaStyle                        RAM(0x0733)
+#define StaircaseControl                 RAM(0x0734)
+#define MushroomLedgeHalfLen             RAMARRAY(0x0736, 3)
+#define EnemyDataOffset                  RAM(0x0739)
+#define EnemyObjectPageLoc               RAM(0x073A)
+#define EnemyObjectPageSel               RAM_bool(0x073B)
+#define ScreenRoutineTask                RAM(0x073C)
+#define ScrollThirtyTwo                  RAM(0x073D)
+#define HorizontalScroll                 RAM(0x073F)
+#define VerticalScroll                   RAM(0x0740)
+#define ForegroundScenery                RAM(0x0741)
+#define BackgroundScenery                RAM(0x0742)
+#define CloudTypeOverride                RAM_bool(0x0743)   // behaves as a boolean. values are 0 and 3, and is tested for 0/non-0
+#define BackgroundColorCtrl              RAM(0x0744)
+#define LoopCommand                      RAM(0x0745)
+#define StarFlagTaskControl              RAM(0x0746)
+#define TimerControl                     RAM(0x0747)
+#define CoinTallyFor1Ups                 RAM(0x0748)
+#define SecondaryMsgCounter              RAM(0x0749)
+#define JoypadBitMask1                   RAM(0x074A)
+#define JoypadBitMask2                   RAM(0x074B)
+#define AreaType                         RAM(0x074E)
+#define AreaAddrsLOffset                 RAM(0x074F)
+#define AreaPointer                      RAM(0x0750)
+#define EntrancePage                     RAM(0x0751)
+#define AltEntranceControl               RAM(0x0752)
+#define CurrentPlayer                    RAM(0x0753)
+#define PlayerSize                       RAM(0x0754)
+#define Player_Pos_ForScroll             RAM(0x0755)
+#define PlayerStatus                     RAM(0x0756)
+#define FetchNewGameTimerFlag            RAM_bool(0x0757)  // this behaves like a boolean. the original would set values to 0, and then set to truthy by incrementing (e.g. FetchNewGameTimeFlag += 1). i don't believe there's a pathological way to wrap back to 0, so such increments are replaced with "true".
+#define JoypadOverride                   RAM(0x0758)
+#define GameTimerExpiredFlag             RAM_bool(0x0759)
+#define NumberofLives                    RAM(0x075A)
+#define HalfwayPage                      RAM(0x075B)
+#define LevelNumber                      RAM(0x075C)
+#define Hidden1UpFlag                    RAM_bool(0x075D)  // this behaves like a boolean. the original would set values to 0, and then set to truthy by incrementing (e.g. Hidden1UpFlag += 1). i don't believe there's a pathological way to wrap back to 0 (not in official ROMs, anyway), so such increments are replaced with "true".
+#define CoinTally                        RAM(0x075E)
+#define WorldNumber                      RAM(0x075F)
+#define AreaNumber                       RAM(0x0760)
+#define ScrollFractional                 RAM(0x0768)
+#define DisableIntermediate              RAM_bool(0x0769)
+#define PrimaryHardMode                  RAM_bool(0x076A)
+#define WorldSelectNumber                RAM(0x076B)
+#define OperMode                         RAM(0x0770)
+#define OperMode_Task                    RAM(0x0772)
+#define VRAM_Buffer_AddrCtrl             RAM(0x0773)
+#define DisableScreenFlag                RAM_bool(0x0774)  // this behaves like a boolean. the original would set values to 0, and then set to truthy by incrementing (e.g. DisableScreenFlag += 1). i don't believe there's a pathological way to wrap back to 0, so such increments are replaced with "true".
+#define ScrollAmount                     RAM(0x0775)
+#define GamePauseStatus                  RAM(0x0776)
+#define GamePauseTimer                   RAM(0x0777)
+#define IntervalTimerControl             RAM(0x077F)
+
+#define SelectTimer                      RAM(0x780)
+#define PlayerAnimTimer                  RAM(0x781)
+#define JumpSwimTimer                    RAM(0x782)
+#define RunningTimer                     RAM(0x783)
+#define BlockBounceTimer                 RAM(0x784)
+#define SideCollisionTimer               RAM(0x785)
+#define JumpspringTimer                  RAM(0x786)
+#define GameTimerCtrlTimer               RAM(0x787)
+#define ClimbSideTimer                   RAM(0x789)
+#define EnemyFrameTimer                  RAMARRAY(0x78A, 6)
+#define FrenzyEnemyTimer                 EnemyFrameTimer[5]
+#define BowserFireBreathTimer            RAM(0x790)
+#define StompTimer                       RAM(0x791)
+#define AirBubbleTimer                   RAM(0x792)
+#define UnusedTimer1                     RAM(0x793)
+#define UnusedTimer2                     RAM(0x794)
+#define ScrollIntervalTimer              RAM(0x795)
+#define EnemyIntervalTimer               RAMARRAY(0x796, 7)
+#define BrickCoinTimer                   RAM(0x79D)
+#define InjuryTimer                      RAM(0x79E)
+#define StarInvincibleTimer              RAM(0x79F)
+#define ScreenTimer                      RAM(0x7A0)
+#define WorldEndTimer                    RAM(0x7A1)
+#define DemoTimer                        RAM(0x7A2)
+#define UnusedTimer3                     RAM(0x7A3)
+
+#define PseudoRandomBitReg               RAMARRAY(0x07A7, 7)
+
+#define MusicOffset_Noise                RAM(0x7B0)
+#define EventMusicBuffer                 RAM(0x7B1)
+#define PauseSoundBuffer                 RAM(0x7B2)
+#define Squ2_NoteLenBuffer               RAM(0x7B3)
+#define Squ2_NoteLenCounter              RAM(0x7B4)
+#define Squ2_EnvelopeDataCtrl            RAM(0x7B5)
+#define Squ1_NoteLenCounter              RAM(0x7B6)
+#define Squ1_EnvelopeDataCtrl            RAM(0x7B7)
+#define Tri_NoteLenBuffer                RAM(0x7B8)
+#define Tri_NoteLenCounter               RAM(0x7B9)
+#define Noise_BeatLenCounter             RAM(0x7BA)
+#define Squ1_SfxLenCounter               RAM(0x7BB)
+#define Squ2_SfxLenCounter               RAM(0x7BD)
+#define Sfx_SecondaryCounter             RAM(0x7BE)
+#define Noise_SfxLenCounter              RAM(0x7BF)
+#define DAC_Counter                      RAM(0x7C0)
+#define NoiseDataLoopbackOfs             RAM(0x7C1)
+#define NoteLengthTblAdder               RAM(0x7C4)
+#define AreaMusicBuffer_Alt              RAM(0x7C5)
+#define PauseModeFlag                    RAM_bool(0x7C6)  // this behaves like a boolean. the original would set values to 0 1 2.
+#define GroundMusicHeaderOfs             RAM(0x7C7)
+#define AltRegContentFlag                RAM_bool(0x7CA)     // this behaves like a boolean. the original sets to 0 and 0x94
+
+#define DisplayDigits                    RAMARRAY(0x07D7, 36)
+
+#define WarmBootValidation               RAM(0x07FF)
+/* smb1 ----------------------- */
+#define Sprite0HitDetectFlag             RAM_bool(0x0722)  // this behaves like a boolean. the original would set values to 0, and then set to truthy by incrementing (e.g. Sprite0HitDetectFlag += 1). i don't believe there's a pathological way to wrap back to 0, so such increments are replaced with "true".
+#define OffScr_NumberofLives             RAM(0x0761)
+#define OffScr_HalfwayPage               RAM(0x0762)
+#define OffScr_LevelNumber               RAM(0x0763)
+#define OffScr_Hidden1UpFlag             RAM_bool(0x0764)
+#define OffScr_CoinTally                 RAM(0x0765)
+#define OffScr_WorldNumber               RAM(0x0766)
+#define OffScr_AreaNumber                RAM(0x0767)
+#define NumberOfPlayers                  RAM(0x077A)
+#ifdef SMB1_MODE
+#define GameTimerDisplay                 (DisplayDigits + 33)
+#endif
+#define WorldSelectEnableFlag            RAM_bool(0x07FC)
+#define ContinueWorld                    RAM(0x07FD)
+/* smb2j ----------------------- */
+#define FDSBIOS_IRQFlag                  RAM(0x0101)
+#define IRQUpdateFlag                    RAM(0x0722)
+#define MsgFractional                    RAM(0x0749)
+#define EndControlCntr                   RAM(0x0761)
+#define BlueColorOfs                     RAM(0x0762)
+#define BlueDelayFlag                    RAM(0x0763)
+#define MushroomRetDelay                 RAM(0x0764)
+#define NameTableSelect                  RAM(0x077A)
+#define IRQAckFlag                       RAM(0x077B)
+#define CoinDisplay                      (DisplayDigits + 16)
+#ifdef SMB2J_MODE
+#define GameTimerDisplay                 (DisplayDigits + 21)
+#endif
+#define FantasyW9MsgFlag                 RAM(0x07F5)
+#define FlagpoleMusicFlag                RAM(0x07F6)
+#define FileListNumber                   RAM(0x07F7)
+#define ContinueMenuSelect               RAM(0x07F8)
+#define WindFlag                         RAM_bool(0x07F9)
+#define CompletedWorlds                  RAM(0x07FA)
+#define HardWorldFlag                    RAM_bool(0x07FB)
+#define DiskIOTask                       RAM(0x07FC)
+#define NotColdFlag                      RAM(0x07FD)
+
+#endif

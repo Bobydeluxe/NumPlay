@@ -1,0 +1,325 @@
+#include "ctx.h"
+#include "vars.h"
+
+
+// SMB:8000
+// Signature: [] -> []
+void Reset(void) {
+  u8 initialize_upto = WarmBootValidation == 0xa5 ? 0xd6 : 0xfe;
+
+  for (int i = 0; i < 6; i++) {
+    if (DisplayDigits[i] > 9) {
+      initialize_upto = 0xfe;
+      break;
+    }
+  }
+
+  InitializeMemory(initialize_upto);
+  OperMode = OM_UNK_0;
+  apu_dmc_raw(0);
+  WarmBootValidation = 0xa5;
+  PseudoRandomBitReg[0] = 0xa5;
+  apu_snd_chn(0xf);
+  ppu_screen_off();
+  MoveAllSpritesOffscreen();
+  InitializeNameTables();
+  DisableScreenFlag = true;
+
+  // There was an infinite do-nothing loop here for the NES.
+  // At this point, the NMI would interrupt the loop each frame.
+  // But as for the port, we just call the NMI ourselves.
+}
+
+static const u8 * vram_buffer(u8 addr_ctrl, u16 *length) {
+  // The VRAM buffers are tightly coupled with the code, so those are hard-coded in here.
+
+  switch (addr_ctrl) {
+  case ADDRCTRL_VRAM_BUFFER1:
+    *length = sizeof SMB_STATE->rammem - 0x301;
+    return &VRAM_Buffer1[0];
+
+  case ADDRCTRL_SMB1_VRAM_PAGE:
+    // This addr_ctrl is only ever used for the title screen, and it's exactly this length
+    // It's not different unless the ROM is modded
+    *length = 0x13A;
+    return &VRAM_Page[0];
+
+  case ADDRCTRL_VRAM_BUFFER2:
+  case ADDRCTRL_VRAM_BUFFER2_unused:
+    *length = sizeof SMB_STATE->rammem - 0x341;
+    return &VRAM_Buffer2[0];
+
+  default:
+    {
+      // Get the other ones from ROM
+
+      const u8 hi = VRAM_AddrTable_High[addr_ctrl];
+      const u8 lo = VRAM_AddrTable_Low[addr_ctrl];
+      const u16 addr = (hi << 8) | lo;
+
+      // TODO - get actual length of the arrays
+      *length = 0x10000 - addr;
+
+      return rom_ptr(addr);
+    }
+  }
+}
+
+// SMB:8082
+// Signature: [] -> []
+void NMI(void) {
+  const bool turn_screen_on = !DisableScreenFlag;
+
+  ppu_screen_off();
+
+  u16 vram_length = 0;
+  const u8 *buf = vram_buffer(VRAM_Buffer_AddrCtrl, &vram_length);
+  update_screen(buf, vram_length);
+
+  if (VRAM_Buffer_AddrCtrl != ADDRCTRL_VRAM_BUFFER2) {
+    VRAM_Buffer1_Offset = 0;
+    VRAM_Buffer1[0] = 0;
+  } else {
+    VRAM_Buffer2_Offset = 0;
+    VRAM_Buffer2[0] = 0;
+  }
+
+  VRAM_Buffer_AddrCtrl = ADDRCTRL_VRAM_BUFFER1;
+
+  if (turn_screen_on) {
+    ppu_screen_on();
+  } else {
+    ppu_screen_off();
+  }
+
+  SoundEngine();
+  apu_end_frame();
+  ReadJoypads();
+  PauseRoutine();
+  UpdateTopScore();
+  if ((GamePauseStatus & 1) == 0) {
+    dectimers();
+    FrameCounter += 1;
+  }
+
+  // Update PRNG (pseudo-random number generator)
+  update_prng(&PseudoRandomBitReg[0]);
+
+  if (Sprite0HitDetectFlag) {
+    // In the NES version, the game waits here until a Sprite 0 hit (the bottom of the status bar).
+    if ((GamePauseStatus & 1) == 0) {
+      MoveSpritesOffscreen();
+      SpriteShuffler();
+    }
+    // In the NES version, the game waits here until Sprite 0 is no longer being hit.
+    // In the NES version, the game wastes 101 CPU cycles here to get the PPU off the bottom of the status bar.
+  }
+
+  ppuscroll_xy(NameTableSelectSMB1 * 256 + HorizontalScroll, VerticalScroll);
+  // NES note: PPUCTRL was set here, so the increment mode would also normally be assigned.
+  // But we can ignore it because no writes to PPUDATA occur for the rest of the NMI.
+
+  if ((GamePauseStatus & 1) == 0) {
+    OperModeExecutionTree();
+  }
+
+  // NES note: the original would enable NMI again (our port ignores this)
+}
+
+
+// Switch between Mario and Luigi.
+// Save and restore their states.
+//
+// SMB:9282
+// Signature: [] -> [C]
+bool TransposePlayers() {
+  // If there are two players, and the other one isn't out of lives
+  if ((NumberOfPlayers != 0) && (OffScr_NumberofLives < 0x80)) {
+    CurrentPlayer ^= 1;
+    // We unrolled a loop here
+    SWAP(NumberofLives, OffScr_NumberofLives);
+    SWAP(HalfwayPage, OffScr_HalfwayPage);
+    SWAP(LevelNumber, OffScr_LevelNumber);
+    SWAP(Hidden1UpFlag, OffScr_Hidden1UpFlag);
+    SWAP(CoinTally, OffScr_CoinTally);
+    SWAP(WorldNumber, OffScr_WorldNumber);
+    SWAP(AreaNumber, OffScr_AreaNumber);
+
+    return false;
+  } else {
+    return true;
+  }
+}
+
+
+// SMB:83f6
+// Signature: [] -> []
+void PrintVictoryMessages(void) {
+  bool inc_msg_counter = true;
+
+  static const u8 addrctrl_world8_lookup[] = {
+    ADDRCTRL_SMB1_YOURQUESTISOVER,
+    ADDRCTRL_SMB1_WEPRESENTYOUANEWQUEST,
+    ADDRCTRL_SMB1_PUSHBUTTONB,
+    ADDRCTRL_SMB1_TOSELECTAWORLD,
+  };
+
+  if (SecondaryMsgCounter == 0) {
+    if (PrimaryMsgCounter == 0) {
+      VRAM_Buffer_AddrCtrl = (CurrentPlayer == 0) ? ADDRCTRL_SMB1_THANKYOUMARIO : ADDRCTRL_SMB1_THANKYOULUIGI;
+    } else if (PrimaryMsgCounter < 9) {
+      if (WorldNumber != 7) {
+        if (PrimaryMsgCounter == 2) {
+          VRAM_Buffer_AddrCtrl = ADDRCTRL_SMB1_BUTOURPRINCESSISINANOTHERCASTLE;
+        }
+
+        if (PrimaryMsgCounter >= 4) {
+          inc_msg_counter = false;
+        }
+      } else {
+        if (PrimaryMsgCounter >= 3) {
+            if (PrimaryMsgCounter == 3) {
+              EventMusicQueue = MUSIC_EVENT_PRINCESS;
+            }
+
+            // Anything over 6 would overflow the address control lookup
+            expect(PrimaryMsgCounter <= 6);
+
+            VRAM_Buffer_AddrCtrl = addrctrl_world8_lookup[PrimaryMsgCounter - 3];
+        }
+      }
+    }
+  }
+
+  if (inc_msg_counter) {
+    ADD_UNSIGNED_16_8(PrimaryMsgCounter, SecondaryMsgCounter,
+                      4);
+
+    if (PrimaryMsgCounter <= 6) {
+      return;
+    }
+  }
+
+  WorldEndTimer = 6;
+
+  expect(OperMode_Task == OMT_2_UNK_3);
+  OperMode_Task = OMT_2_UNK_4;
+}
+
+
+// SMB:8808
+// Signature: [A] -> []
+void WriteGameText(const u8 param_1) {
+  // param_1 is 0,1,2,3, 4,5,6
+
+  // param_1=0: 0: Top status bar line
+
+  // param_1=1: 2: World and Lives display
+
+  // param_1=2: 5: One-player time-up message: "TIME UP"
+  // param_1=2: 4: Two-player time up message: "MARIO TIME UP"
+
+  // param_1=3: 7: One-player game over message: "GAME OVER"
+  // param_1=3: 6: Two-player game over message: "MARIO GAME OVER"
+
+  // param_1=4,5,6: 9 and 8: Warp zone message: "WELCOME TO WARP ZONE!"
+
+  static u8 const p1_l[7] = {0,2,5,7,9,9,9};
+  static u8 const p2_l[7] = {0,2,4,6,8,8,8};
+
+  u8 offset;
+  if (NumberOfPlayers == 0) {
+    offset = GameTextOffsets[p1_l[param_1]];
+  } else {
+    offset = GameTextOffsets[p2_l[param_1]];
+  }
+
+  bool terminated = false;
+  for (int i = 0; i < 256; i++) {
+    const u8 val = GameText[offset];
+    if (val == 0xff) {
+      VRAM_Buffer1[i] = 0;
+      terminated = true;
+      break;
+    }
+    VRAM_Buffer1[i] = val;
+    offset += 1;
+  }
+  if (!terminated) {
+    VRAM_Buffer1[0] = 0;
+  }
+
+  if (param_1 >= 4) {
+    // Wrote the "Welcome to warp zone!" message
+
+    // Write the specific warp zone numbers
+    for (int i = 0; i < 3; i++) {
+      VRAM_Buffer1[0x1b + i*4] = WarpZoneNumbers[(param_1 - 4) * 4 + i];
+    }
+    VRAM_Buffer1_Offset = 0x2c;
+    return;
+  }
+
+  if (param_1 == 1) {
+    // Wrote the world and lives display screen
+
+    const u8 lives_tile = NumberofLives + 1;
+
+    if (lives_tile < 10) {
+      // Draw the number of lives if under 10
+      VRAM_Buffer1[8] = lives_tile;
+    } else {
+      // Draw crown tile, then the number of lives
+      VRAM_Buffer1[7] = 0x9f;
+      VRAM_Buffer1[8] = lives_tile - 10;
+    }
+
+    // Write the world and level numbers
+    const u8 world_number_display = WorldNumber + 1;
+    const u8 level_number_display = LevelNumber + 1;
+    VRAM_Buffer1[19] = world_number_display;
+    VRAM_Buffer1[21] = level_number_display;
+
+    return;
+  }
+
+  if (NumberOfPlayers != 0) {
+    bool set_name_to_luigi = (CurrentPlayer & 1) != 0;
+
+    if ((param_1 == 2) && (OperMode != OM_UNK_3)) {
+      // Time up message
+      set_name_to_luigi = !set_name_to_luigi;
+    }
+
+    if (set_name_to_luigi) {
+      for (int i = 0; i < 5; i++) {
+        VRAM_Buffer1[i + 3] = LuigiName[i];
+      }
+    }
+  }
+}
+
+
+// SMB:e01b
+// Signature: [A, X] -> []
+void ChkToStunEnemies(const u8 actor_id, const u8 param_2) {
+  // Turn these enemies into koopas
+  switch (actor_id) {
+  case A_GREEN_PARATROOPA_INPLACE:
+  case A_RED_PARATROOPA:
+  case A_PIRANHA_PLANT:
+    actor_set_id(param_2, A_RED_KOOPA_GREENLIKE);
+    break;
+
+  case A_GREEN_PARATROOPA:
+  case A_GREEN_PARATROOPA_HORIZONTAL:
+    actor_set_id(param_2, A_GREEN_KOOPA);
+    break;
+  }
+
+  // Inlined: SetStun
+
+  actor_state_set_stun(param_2);
+
+  SetStun2(param_2);
+}

@@ -107,6 +107,7 @@ These are too big to fit next to NumPlay, so each one is its own app. Install it
   </tr>
   <tr>
     <td align="center"><a href="https://github.com/Mason363/NumWorks-Super-Mario-64"><b>Super Mario 64</b></a><br><sub>In a repository of its own: NumWorks-Super-Mario-64</sub></td>
+    <td align="center"><a href="games/supermariobros/README.md"><img src="docs/media/thumb_supermariobros.png" width="200" alt="Super Mario Bros."><br><b>Super Mario Bros.</b></a><br><sub>All 32 original stages, adapted by Bobydeluxe</sub><br><a href="https://github.com/Mason363/NumPlay/releases/latest/download/SuperMarioBros.nwa">Download</a></td>
     <td align="center"><a href="#roadmap"><b>More on the way</b></a><br><sub>Minecraft 1.18.2, Retro-Go and more: see the roadmap</sub></td>
   </tr>
 </table>
@@ -240,6 +241,7 @@ NumPlay is a fan project, made out of love for these games and for the NumWorks 
 
 - **[Tatone26](https://github.com/Tatone26/Numworks-games)**'s **All the Apps** inspired NumPlay's list of classics. Flappy Bird, Pac-Man, Snake, Connect Four, Solitaire and 2048 are written in C for NumPlay and keep its options, with no code copied from it. Tetris is Tatone26's own, which they released into the public domain, adapted for NumPlay.
 - **[Gabriele Cirulli](https://github.com/gabrielecirulli/2048)** made 2048.
+- **[Bobydeluxe](https://github.com/Bobydeluxe)** made the **[Super Mario Bros.](games/supermariobros/README.md)** NumWorks adaptation. **Nintendo** created the original game, levels, characters and artwork. The native C engine is **[SMB-Vanilla](https://github.com/nukep/SMB-Vanilla)** by **nukep**, under GPL-3.0; source and asset credits are recorded in the game's [provenance notes](games/supermariobros/assets/README.md). Not affiliated with Nintendo.
 - **Block Blast!** by [Hungry Studio](https://www.hungrystudio.com) inspired NumPlay's Block Blast, written in C for NumPlay with no code or art from it. Its blocks, scoring and colours follow measurements of the app by the players behind [blockblast-Self-Improvement-loop](https://github.com/Kucze3205/blockblast-Self-Improvement-loop).
 - Snake, Solitaire and Block Breaker look and play like **Google's games** in Search. They are drawn from scratch; nothing is taken from Google.
 - **Chrome's dinosaur game** by Google inspired Chrome Dino, which ports its rules, numbers and pictures from [Chromium's source](https://chromium.googlesource.com/chromium/src/+/main/components/neterror/resources/dino_game/) (BSD license). **[LilyTheCatgirl](https://github.com/LilyTheCuteCatgirl)** brought it to NumPlay, and also made the live emulator (`tools/emu_live.py`) and the Windows builder. Not affiliated with Google.

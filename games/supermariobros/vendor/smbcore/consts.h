@@ -1,0 +1,440 @@
+#ifndef SMBCORE_CONSTS
+#define SMBCORE_CONSTS
+
+// The term "enemy" is too specific.
+// Something like "actor" is more general for this case.
+// TODO: consider updating this concept across the codebase
+
+enum actor_id {
+  A_GREEN_KOOPA=0,
+  A_RED_KOOPA_GREENLIKE,        // red, but falls off ledges
+  A_BUZZY_BEETLE,
+  A_RED_KOOPA,
+  A_PIRANHA_PLANT_SMB2J,
+  A_HAMMER_BRO,
+  A_GOOMBA,
+  A_BLOOBER,
+  A_BULLET_BILL,
+  A_GREEN_PARATROOPA_INPLACE,   // flies in place (doesn't move)
+  A_CHEEPCHEEP_GRAY,
+  A_CHEEPCHEEP_RED,
+  A_PODOBOO,
+  A_PIRANHA_PLANT,
+  A_GREEN_PARATROOPA,           // hops horizontally
+  A_RED_PARATROOPA,             // flies vertically
+  A_GREEN_PARATROOPA_HORIZONTAL,
+  A_LAKITU,
+  A_SPINY,
+  A_UNK_0x13,                   // corrupted graphics
+  A_FLYING_CHEEPCHEEP,
+  A_BOWSER_FLAME,
+  A_FIREWORKS,
+  A_BULLET_BILL_OR_CHEEPCHEEP_FRENZY,
+  A_STOP_FRENZY,
+  A_UNK_0x19,
+  A_UNK_0x1A,
+  A_FIREBAR_1,
+  A_FIREBAR_2,
+  A_FIREBAR_3,
+  A_FIREBAR_4,
+  A_FIREBAR_5,
+  A_FIREBAR_6,
+  A_FIREBAR_7,
+  A_FIREBAR_8,
+  A_UNK_0x23,
+  A_LARGEPLATFORM_BALANCE,
+  A_LARGEPLATFORM_Y_MOVING,
+  A_LARGEPLATFORM_LIFT1,
+  A_LARGEPLATFORM_LIFT2,
+  A_LARGEPLATFORM_X_MOVING,
+  A_LARGEPLATFORM_DROP,
+  A_LARGEPLATFORM_RIGHT,
+  A_SMALLPLATFORM_1,
+  A_SMALLPLATFORM_2,
+  A_BOWSER,
+  A_POWERUP,
+  A_VINE,
+  A_FLAGPOLE,
+  A_STARFLAG,
+  A_JUMPSPRING,
+  A_BULLET_BILL_CANNON,
+  A_WARPZONE,
+  A_RETAINER,
+  A_UNK_0x36,
+};
+
+static inline bool is_actor_valid(const u8 id) {
+  return id <= 0x3f;
+}
+
+static inline bool is_actor_enemy(const u8 id) {
+  return id <= A_FLYING_CHEEPCHEEP;
+}
+
+static inline bool is_actor_unknown_class(const u8 id) {
+  // I'm not sure what this is
+  return id >= 0x18;
+}
+
+static inline bool is_actor_groupenemy(const u8 id) {
+  return id >= 0x37 && id <= 0x3e;
+}
+
+static inline u8 actor_groupenemy(const u8 id) {
+  return id - 0x37;
+}
+
+static inline bool is_actor_even(const u8 id) {
+  return (id & 1) == 0;
+}
+
+static inline bool is_actor_firebar(const u8 id) {
+  return id >= A_FIREBAR_1 && id <= A_FIREBAR_8;
+}
+
+static inline bool is_actor_firebar_short(const u8 id) {
+  return id >= A_FIREBAR_1 && id <= A_FIREBAR_4;
+}
+
+static inline bool is_actor_firebar_long(const u8 id) {
+  return id >= A_FIREBAR_5 && id <= A_FIREBAR_8;
+}
+
+static inline bool is_actor_platform_large(const u8 id) {
+  return id >= A_LARGEPLATFORM_BALANCE && id <= A_LARGEPLATFORM_RIGHT;
+}
+
+
+enum gfx_table_offsets {
+  TOFF_BUZZY_BEETLE_1=0x00,
+  TOFF_BUZZY_BEETLE_2=0x06,
+
+  TOFF_KOOPA_1=0x0c,
+  TOFF_KOOPA_2=0x12,
+
+  TOFF_PARATROOPA_1=0x18,
+  TOFF_PARATROOPA_2=0x1e,
+
+  TOFF_SPINY_1=0x24,
+  TOFF_SPINY_2=0x2a,
+
+  TOFF_SPINY_EGG_1=0x30,
+  TOFF_SPINY_EGG_2=0x36,
+
+  TOFF_BLOOBER_1=0x3c,
+  TOFF_BLOOBER_2=0x42,
+
+  TOFF_CHEEPCHEEP_1=0x48,
+  TOFF_CHEEPCHEEP_2=0x4e,
+
+  TOFF_GOOMBA=0x54,
+
+  TOFF_KOOPA_SHELL_UPSIDEDOWN_1=0x5a,
+  TOFF_KOOPA_SHELL_UPSIDEDOWN_2=0x60,
+
+  TOFF_KOOPA_SHELL_1=0x66,
+  TOFF_KOOPA_SHELL_2=0x6c,
+
+  TOFF_BUZZY_BEETLE_SHELL_UPSIDEDOWN_1=0x72,
+  TOFF_BUZZY_BEETLE_SHELL_UPSIDEDOWN_2=0x78,
+
+  TOFF_BUZZY_BEETLE_SHELL_1=0x7e,
+  TOFF_BUZZY_BEETLE_SHELL_2=0x84,
+
+  TOFF_STOMPED_GOOMBA=0x8a,
+
+  TOFF_LAKITU_1=0x90,
+  TOFF_LAKITU_2=0x96,
+
+  TOFF_PRINCESS_OR_DOOR=0x9c,
+
+  TOFF_MUSHROOM_RETAINER=0xa2,
+
+  TOFF_HAMMER_BRO_1=0xa8,
+  TOFF_HAMMER_BRO_2=0xae,
+  TOFF_HAMMER_BRO_3=0xb4,
+  TOFF_HAMMER_BRO_4=0xba,
+
+  TOFF_PIRANHA_PLANT_1=0xc0,
+  TOFF_PIRANHA_PLANT_2=0xc6,
+
+  TOFF_PODOBOO=0xcc,
+
+  TOFF_BOWSER_FRONT_1=0xd2,
+  TOFF_BOWSER_REAR_1=0xd8,
+  TOFF_BOWSER_FRONT_2=0xde,
+  TOFF_BOWSER_REAR_2=0xe4,
+
+  TOFF_BULLET_BILL=0xea,
+
+  TOFF_JUMPSPRING_1=0xf0,
+  TOFF_JUMPSPRING_2=0xf6,
+  TOFF_JUMPSPRING_3=0xfc,
+};
+
+#include "tiles.h"
+
+enum opermode {
+  OM_UNK_0=0,
+  OM_UNK_1,
+  OM_UNK_2,
+  OM_UNK_3,
+};
+
+enum opermodetask_0 {
+  OMT_0_START=0,
+#ifdef SMB1_MODE
+  OMT_0_UNK_0=OMT_0_START,
+#endif
+#ifdef SMB2J_MODE
+  OMT_0_UNK_4=OMT_0_START,
+  OMT_0_UNK_0,
+#endif
+  OMT_0_UNK_1,
+  OMT_0_UNK_2,
+  OMT_0_UNK_3,
+#ifdef SMB2J_MODE
+  OMT_0_UNK_5,
+#endif
+  _OMT_0_NUM,
+};
+
+enum opermodetask_1 {
+  OMT_1_START=0,
+#ifdef SMB1_MODE
+  OMT_1_UNK_0=OMT_1_START,
+#endif
+#ifdef SMB2J_MODE
+  OMT_1_UNK_4=OMT_1_START,
+  OMT_1_UNK_0,
+#endif
+  OMT_1_UNK_1,
+  OMT_1_UNK_2,
+  OMT_1_UNK_3,
+  _OMT_1_NUM,
+};
+
+enum opermodetask_2 {
+  OMT_2_UNK_0,
+  OMT_2_UNK_1,
+  OMT_2_UNK_2,
+  OMT_2_UNK_3,
+#ifdef SMB2J_MODE
+  OMT_2_UNK_5,
+#endif
+  OMT_2_UNK_4,
+  _OMT_2_NUM,
+};
+
+enum opermodetask_2_world8_smb2j {
+  OMT_2_W8SMB2J_UNK_0 = OMT_2_UNK_0,
+  OMT_2_W8SMB2J_UNK_1 = OMT_2_UNK_1,
+  OMT_2_W8SMB2J_UNK_2 = OMT_2_UNK_2,
+
+  OMT_2_W8SMB2J_UNK_3 = 3,
+  OMT_2_W8SMB2J_UNK_4,
+  OMT_2_W8SMB2J_UNK_5,
+  OMT_2_W8SMB2J_UNK_6,
+  OMT_2_W8SMB2J_UNK_7,
+  OMT_2_W8SMB2J_UNK_8,
+  OMT_2_W8SMB2J_UNK_9,
+  OMT_2_W8SMB2J_UNK_10,
+  OMT_2_W8SMB2J_UNK_11,
+  OMT_2_W8SMB2J_UNK_12,
+  OMT_2_W8SMB2J_UNK_13,
+  _OMT_2_W8SMB2J_NUM,
+};
+
+enum opermodetask_3 {
+  OMT_3_UNK_0,
+  OMT_3_UNK_1,
+  OMT_3_UNK_2,
+  _OMT_3_NUM,
+};
+
+static inline bool is_opermodetask_valid(void) {
+  switch (OperMode) {
+  case OM_UNK_0: return OperMode_Task < _OMT_0_NUM;
+  case OM_UNK_1: return OperMode_Task < _OMT_1_NUM;
+  case OM_UNK_2:
+#ifdef SMB2J_MODE
+    if (WorldNumber == 7) { return OperMode_Task < _OMT_2_W8SMB2J_NUM; }
+#endif
+    return OperMode_Task < _OMT_2_NUM;
+  case OM_UNK_3: return OperMode_Task < _OMT_3_NUM;
+  default: return false;
+  }
+}
+
+enum screenroutinetask {
+  SRT_UNK_0,
+  SRT_UNK_1,
+  SRT_UNK_2,
+  SRT_UNK_3,
+  SRT_UNK_4,
+  SRT_UNK_5,
+  SRT_UNK_6,
+#ifdef SMB2J_MODE
+  SRT_UNK_15,
+#endif
+  SRT_UNK_7,
+  SRT_UNK_8,
+  SRT_UNK_9,
+  SRT_UNK_10,
+  SRT_UNK_11,
+  SRT_UNK_12,
+  SRT_UNK_13,
+  SRT_UNK_14,
+};
+
+enum screenroutinetask_world8_smb2j {
+  SRT_W8SMB2J_UNK_0,
+  SRT_W8SMB2J_UNK_1,
+  SRT_W8SMB2J_UNK_2,
+  SRT_W8SMB2J_UNK_3,
+  SRT_W8SMB2J_UNK_4,
+  SRT_W8SMB2J_UNK_5,
+  SRT_W8SMB2J_UNK_6,
+};
+
+
+enum gameroutine {
+  GR_UNK_0,
+  GR_UNK_1,
+  GR_UNK_2,
+  GR_UNK_3,
+  GR_UNK_4,
+  GR_UNK_5,
+  GR_UNK_6,
+  GR_UNK_7,
+  GR_UNK_8,
+  GR_UNK_9,
+  GR_UNK_10,
+  GR_UNK_11,
+  GR_UNK_12,
+};
+
+
+static inline bool is_gameroutine_valid(const u8 gr) {
+  return gr <= GR_UNK_12;
+}
+
+enum playerstate {
+  PLAYERSTATE_UNK_0,
+  PLAYERSTATE_UNK_1,
+  PLAYERSTATE_UNK_2,
+  PLAYERSTATE_UNK_3,
+};
+
+enum playerstatus {
+  PLAYERSTATUS_SMALL,
+  PLAYERSTATUS_BIG,
+  PLAYERSTATUS_FIREFLOWER,
+};
+
+static inline bool is_playerstatus_valid(const u8 playerstatus) {
+  return playerstatus <= PLAYERSTATUS_FIREFLOWER;
+}
+
+enum powerup {
+  POWERUP_MUSHROOM,
+  POWERUP_FIREFLOWER,
+  POWERUP_STAR,
+  POWERUP_1UP,
+#ifdef SMB2J_MODE
+  POWERUP_POISONSHROOM,
+#endif
+  _POWERUP_NUM,
+};
+
+static inline bool is_powerup_valid(const u8 powerup) {
+  return powerup < _POWERUP_NUM;
+}
+
+enum areatype {
+  AREA_WATER,
+  AREA_GROUND,
+  AREA_UNDERGROUND,
+  AREA_CASTLE
+};
+
+static inline bool is_areatype_valid(const u8 areatype) {
+  return areatype <= AREA_CASTLE;
+}
+
+enum starflagtaskcontrol {
+  STARFLAGTASK_UNK_0,
+  STARFLAGTASK_UNK_1,
+  STARFLAGTASK_UNK_2,
+  STARFLAGTASK_UNK_3,
+  STARFLAGTASK_UNK_4,
+  STARFLAGTASK_UNK_5
+};
+
+
+// Used by draw_block_metatile()
+enum block_gfx_idx {
+  BMT_BRICK_2 = 0,                // has white line. first used in World 8-3
+  BMT_BRICK,
+  BMT_BLOCK_EMPTY,                // a block with no more coins/powerups
+  BMT_VOID,                       // the empty space that replaces a coin, or replaces a block when it's bumped and turns into a sprite
+  BMT_VOID_UNDERWATER,
+  _BMT_NUM
+};
+
+
+#define SOUND_SQ1_JUMP_SMALL      0x80
+#define SOUND_SQ1_FLAGPOLE        0x40
+#define SOUND_SQ1_FIREBALL        0x20
+#define SOUND_SQ1_PIPE_OR_INJURY  0x10
+#define SOUND_SQ1_KICK            0x08
+#define SOUND_SQ1_SWIM_OR_SQUISH  0x04
+#define SOUND_SQ1_BUMP            0x02
+#define SOUND_SQ1_JUMP_BIG        0x01
+
+#define SOUND_SQ1_NONE            0
+
+#define SOUND_SQ2_BOWSERFALL      0x80
+#define SOUND_SQ2_1UP             0x40
+#define SOUND_SQ2_POWERUP_GRAB    0x20
+#define SOUND_SQ2_TIMER_TICK      0x10
+#define SOUND_SQ2_KABOOM          0x08
+#define SOUND_SQ2_VINE            0x04
+#define SOUND_SQ2_POWERUP_BLOCK   0x02
+#define SOUND_SQ2_COIN            0x01
+
+#define SOUND_SQ2_NONE            0
+
+// SMB2J only
+#define SOUND_NOISE_SKID          0x80
+// SMB2J only
+#define SOUND_NOISE_WIND          0x04
+
+#define SOUND_NOISE_BOWSERFLAME   0x02
+#define SOUND_NOISE_BRICKSHATTER  0x01
+
+#define SOUND_NOISE_NONE          0
+
+
+#define MUSIC_EVENT_STOP                0x80
+#define MUSIC_EVENT_TIMERUNNINGOUT      0x40
+#define MUSIC_EVENT_LEVELEND            0x20
+#define MUSIC_EVENT_BOWSERVICTORY       0x08
+#define MUSIC_EVENT_PRINCESS            0x04
+#define MUSIC_EVENT_GAMEOVER            0x02
+#define MUSIC_EVENT_DEATH               0x01
+
+#define MUSIC_EVENT_NONE                0
+
+#define MUSIC_AREA_SILENCE              0x80
+#define MUSIC_AREA_STAR                 0x40
+#define MUSIC_AREA_PIPEINTRO            0x20
+#define MUSIC_AREA_CLOUD                0x10
+#define MUSIC_AREA_CASTLE               0x08
+#define MUSIC_AREA_UNDERGROUND          0x04
+#define MUSIC_AREA_WATER                0x02
+#define MUSIC_AREA_GROUND               0x01
+
+#define MUSIC_AREA_NONE                 0
+
+#endif

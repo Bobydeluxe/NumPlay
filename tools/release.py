@@ -23,6 +23,8 @@ REPO = "https://github.com/Mason363/NumPlay"
 EXTRAS = set()
 # games too big to fit next to NumPlay on the calculator: only on their own, in a section of their own
 ALONE = {
+    "supermariobros": ("Super Mario Bros.", "the complete original 32-stage campaign, adapted by Bobydeluxe. "
+                       "A standalone big game: install it separately from the NumPlay launcher"),
     "celeste": ("Celeste", "the whole climb up Celeste Mountain. Too big to share the calculator with NumPlay: install it "
                 "on its own"),
     "hollowknight": ("Hollow Knight", "from King's Pass to Hornet in Greenpath. Too big to share the calculator with "
