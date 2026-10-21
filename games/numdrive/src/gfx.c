@@ -1,4 +1,5 @@
 /* Minimal anti-aliased 2D drawing into screen strips (UI, menus, HUD). */
+#pragma GCC optimize ("O2")  /* (drawn every frame: fast, while the rest of the game is built small) */
 #include <math.h>
 #include "gfx.h"
 #include "platform.h"

@@ -2,33 +2,59 @@
 // port needs as JSON: every symbol of its 15 Adobe Animate libraries, baked
 // frame by frame, and its dialogue trees.
 //
-//   node tools/extract.js SRC OUT
+//   node tools/extract.js SRC OUT [LIVE]
 //
-// SRC is a copy of the doodle (github.com/potherca-blog/Google-Doodle-Champion-Island).
-// It runs the doodle in headless Chromium through Playwright, starts the game
-// so that every library is loaded, then instantiates each symbol.
+// SRC is a copy of the doodle (github.com/potherca-blog/Google-Doodle-Champion-Island),
+// its build rc6. LIVE is a folder with the files of the build Google serves
+// now, rc7 (`make live` fetches them): with it, that build is read instead,
+// served from /logos/2020/kitsune/rc7/ as on google.com, with SRC's page and
+// script libraries.
+// It runs the doodle in headless Chromium through Playwright (CHROME=path
+// uses that browser), starts the game so that every library is loaded, then
+// instantiates each symbol.
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 let chromium;
-try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = require('/opt/node22/lib/node_modules/playwright')); }
+for (const m of ['playwright', '/opt/node22/lib/node_modules/playwright', 'playwright-core']) {
+  try { ({ chromium } = require(m)); break; } catch (e) {}
+}
 
 const SRC = path.resolve(process.argv[2] || '../../../potherca-blog/google-doodle-champion-island');
 const OUT = path.resolve(process.argv[3] || 'build/ex');
+const LIVE = process.argv[4] ? path.resolve(process.argv[4]) : null;
+const BASE = LIVE ? '/logos/2020/kitsune/rc7/' : '/';
 fs.mkdirSync(OUT, { recursive: true });
 
 const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4', '.ttf': 'font/ttf' };
 const server = http.createServer((req, res) => {
-  const f = path.join(SRC, decodeURIComponent(req.url.split('?')[0]));
-  if (!f.startsWith(SRC) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); res.end(); return; }
+  const url = decodeURIComponent(req.url.split('?')[0]);
+  if (LIVE && url === BASE + 'kitsune20.html') {
+    // SRC's page without the scripts it also lists in its head: its own loader
+    // loads them, and the live kitsune20.js loads its module itself
+    const page = fs.readFileSync(path.join(SRC, 'index.html'), 'utf8').split('\n')
+      .filter(l => !/<script async="" src=|src="kitsune_compiled_deferred_module.js"/.test(l)).join('\n');
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(page);
+    return;
+  }
+  let f = null;
+  if (url.startsWith(BASE)) {
+    const rel = url.slice(BASE.length);
+    for (const dir of LIVE ? [LIVE, SRC] : [SRC]) {
+      const g = path.join(dir, rel);
+      if (g.startsWith(dir) && fs.existsSync(g) && !fs.statSync(g).isDirectory()) { f = g; break; }
+    }
+  }
+  if (!f) { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream' });
   fs.createReadStream(f).pipe(res);
 });
 
 // The dialogue trees are one array literal in kitsune20.js ("var Ok = [...]").
 function dialogues() {
-  const s = fs.readFileSync(path.join(SRC, 'kitsune20.js'), 'utf8');
-  const i = s.indexOf('var Ok = [') + 'var Ok = '.length;
+  const s = fs.readFileSync(path.join(LIVE || SRC, 'kitsune20.js'), 'utf8');
+  const i = s.search(/var Ok ?= ?\[/) + s.match(/var Ok ?= ?/)[0].length;
   let depth = 0, k = i, q = null;
   for (; ; k++) {
     const ch = s[k];
@@ -40,9 +66,16 @@ function dialogues() {
   return Function('return ' + s.slice(i, k + 1))();
 }
 
+// Runs in the page: the libraries by id (AdobeAn's compositions: Closure gave
+// the object another name in each build).
+function compositions() {
+  return Object.values(window.Sk || {}).find(v => v && typeof v === 'object' && !Array.isArray(v) &&
+    Object.values(v).some(o => o && typeof o.getLibrary === 'function')) || {};
+}
+
 // Runs in the page: bakes one library.
 function bake(id) {
-  const o = Sk.Kf[id], lib = o.getLibrary(), cj = createjs;
+  const o = compositions()[id], lib = o.getLibrary(), cj = createjs;
   const symName = new Map();
   for (const k of Object.keys(lib)) { const v = lib[k]; if (typeof v === 'function' && v.prototype instanceof cj.DisplayObject) symName.set(v, k); }
   const protoName = new Map(); for (const [v, k] of symName) protoName.set(v.prototype, k);
@@ -128,7 +161,8 @@ function bake(id) {
     syms[name] = s;
   }
   const props = lib.properties || {};
-  const manifest = (props.aB || props.manifest || []).map(m => [m.id, m.src]);
+  const mkey = Object.keys(props).find(k => Array.isArray(props[k]) && props[k].length && props[k][0] && props[k][0].src !== undefined);
+  const manifest = (mkey ? props[mkey] : []).map(m => [m.id, m.src]);
   return JSON.stringify({ id, w: props.width, h: props.height, fps: props.fps, manifest, syms }, (k, v) => {
     if (v && typeof v === 'object' && v instanceof cj.DisplayObject) return '<DO>';
     if (typeof v === 'function') { const n = symName.get(v); return n ? '<sym:' + n + '>' : '<fn>'; }
@@ -138,14 +172,18 @@ function bake(id) {
 
 (async () => {
   await new Promise(r => server.listen(0, r));
-  const url = `http://localhost:${server.address().port}/index.html`;
-  const browser = await chromium.launch();
+  const url = `http://localhost:${server.address().port}${LIVE ? BASE + 'kitsune20.html' : '/index.html'}`;
+  const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
   const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
+  // nothing from elsewhere; the pixel font from gstatic.com is the copy in SRC
+  await page.route(/^https?:\/\/(?!localhost)/, r => r.abort());
+  await page.route('**/PixelMplus10-Regular.ttf', r => r.fulfill({ path: path.join(SRC, 'PixelMplus10-Regular.ttf'), contentType: 'font/ttf' }));
+  await page.addInitScript(`window.compositions = ${compositions}`);
   await page.goto(url);
   await page.waitForTimeout(5000);
   await page.mouse.click(480, 270);            // start: loads the deferred libraries
-  await page.waitForFunction(() => window.Sk && Object.keys(Sk.Kf).length >= 15, null, { timeout: 60000 });
-  for (const id of await page.evaluate(() => Object.keys(Sk.Kf))) {
+  await page.waitForFunction(() => Object.keys(compositions()).length >= 15, null, { timeout: 60000 });
+  for (const id of await page.evaluate(() => Object.keys(compositions()))) {
     const json = await page.evaluate(bake, id);
     fs.writeFileSync(path.join(OUT, id + '.json'), json);
     console.log(id, json.length);

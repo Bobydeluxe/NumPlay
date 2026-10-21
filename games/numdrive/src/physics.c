@@ -1,5 +1,6 @@
 /* 2D rigid body physics (motion in the xy plane, rotation about z) for Fancade objects.
  * Collision shapes keep their z extents so only overlapping depth ranges interact. */
+#pragma GCC optimize ("O2")  /* (drawn every frame: fast, while the rest of the game is built small) */
 #include <string.h>
 #ifdef HOST
 #include <stdlib.h>

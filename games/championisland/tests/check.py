@@ -372,6 +372,83 @@ still = [kb.get(f, 0) for f in range(60, 120)]
 check("the streets by the blue team's headquarters decode little after the ending", sum(still) / 60 < 40 and max(still) < 120,
       f"{sum(still) / 60:.0f} KB a frame, at most {max(still):.0f} KB")
 
+# the doodle's two side quests that came with its update (rc7), which the port
+# lacked with their trophies (Mason363/NumPlay#90): each played through, the
+# options picked as a player would, from one save
+def read_save(path):
+    """The values of a save (store.c's format)."""
+    b, i, vals = open(path, "rb").read(), 3, {}
+    while i < len(b):
+        k = b[i + 1:i + 1 + b[i]].decode()
+        i += 1 + b[i]
+        t = b[i]
+        i += 1
+        if t == 2:
+            vals[k], i = bool(b[i]), i + 1
+        elif t == 3:
+            vals[k], i = struct.unpack("<f", b[i:i + 4])[0], i + 4
+        elif t == 4:
+            vals[k], i = b[i + 1:i + 1 + b[i]].decode(), i + 1 + b[i]
+    return vals
+
+
+def converse(scene, pos, steps, saves, store=None):
+    """Lucky at pos presses OK and goes through what is said, a line every 120
+    frames (the longest types in 55): "ok" goes on, a number k picks the option
+    k (0 the first). Returns the dialogues begun and the values saved after."""
+    keys, t = ["20:ok"], 20
+    for s in steps.split():
+        t += 120
+        keys += [f"{t - 12 + 4 * j}:down" for j in range(0 if s == "ok" else int(s))] + [f"{t}:ok"]
+    env = {"CI_TUTORIAL_DONE": "1", "CI_LOG": "1", "CI_POS": pos}
+    if store:
+        env["CI_STORE"] = store
+    _, err, _ = run(scene, t + 60, ",".join(keys + [f"{t + 50}:home"]), env=env, saves=saves)
+    return [line.split(" dialog ")[1] for line in err.splitlines() if " dialog " in line], read_save(saves + "/champion.sav")
+
+
+GAZEBO, CRAB, ONI = ("interior:gazebo", "122,47"), ("overworld@banyantree2", "1530,646"), ("overworld@onibrothershouse", "1262,-128")
+BOOKSTORE, OWL = ("interior:bookstore", "51,66"), ("interior:climbingdojomainroom", "240,62")
+PEDESTALS = {"DREAM_HOME": "-18,140", "LITTLE_ONI": "259,140", "TROPHY_MASTER": "82,71"}
+saves = tempfile.mkdtemp(prefix="ci_check_")
+said, v = converse(*GAZEBO, "ok ok ok 1 ok ok ok ok 1 ok ok", saves)
+check("the agent in the red pagoda asks for help selling it", said == ["questDreamHome inactive"] and v.get("DREAM_HOME") == "active", f"{said} {v}")
+said, v = converse(*CRAB, "ok ok ok ok 2 ok ok 1 ok ok ok ok ok ok", saves)
+check("the rich crab on the beach buys it and hops in Lucky's scarf", said == ["questDreamHome activeCrab"] and v.get("DREAM_HOME") == "found",
+      f"{said} {v}")
+said, _ = converse(*CRAB, "ok", saves)
+check("the crab is gone from the beach", said == [], f"{said}")
+said, v = converse(*GAZEBO, "ok ok ok ok ok ok ok ok ok", saves)
+check("the crab buys the red pagoda", said == ["questDreamHome found"] and v.get("DREAM_HOME") == "complete", f"{said} {v}")
+said, _ = converse(GAZEBO[0], "125,80", "ok", saves)
+check("his family lives there now", said == ["questDreamHome completeCrab"], f"{said}")
+said, v = converse("interior:trophyRoom", PEDESTALS["DREAM_HOME"], "ok ok", saves)
+check("the Crabby Realtor trophy", said == ["questDreamHome completeTrophy"], f"{said}")
+said, v = converse(*ONI, "2 ok ok ok ok ok ok", saves)
+check("the little oni wants to play rugby", said == ["questLittleOni inactive"] and v.get("LITTLE_ONI") == "active", f"{said} {v}")
+said, v = converse(*BOOKSTORE, "ok ok ok ok ok", saves)
+check("the bookstore sold its last book to the climbing dojo", said == ["questLittleOni activeBookkeeper"] and v.get("LITTLE_ONI") == "climbing",
+      f"{said} {v}")
+said, v = converse(*OWL, "ok ok ok ok ok ok ok ok ok ok ok", saves)
+check("the smallest owl gives the book away", said == ["questLittleOni climbingSnowOwl7"] and v.get("LITTLE_ONI") == "found", f"{said} {v}")
+said, v = converse(*ONI, "ok ok ok ok ok ok", saves)
+check("the little oni reads it and runs off", said == ["questLittleOni found"] and v.get("LITTLE_ONI") == "complete", f"{said} {v}")
+said, _ = converse(*ONI, "ok", saves)
+check("the little oni is gone to practise", said == [], f"{said}")
+said, _ = converse("interior:trophyRoom", PEDESTALS["LITTLE_ONI"], "ok ok", saves)
+check("the Little Motivator trophy", said == ["questLittleOni completeTrophy"], f"{said}")
+shutil.rmtree(saves, ignore_errors=True)
+# the Trophy Master's own quest waits for these two as well
+done = {q: "complete" for q in ("ARROWS", "BIRTHDAY", "CHASE", "COACH", "CONSTRUCTION", "DRIFTWOOD", "FAN", "GHOST", "HOT_SPRING", "LANTERN_LIGHT",
+                                "LOST_BOOK", "LOST_PADDLE", "LUCKY_ARROW", "MOMOTARO", "ONI", "PORCUPINE", "RACE", "RAIN", "SLEEPING_CAT",
+                                "TRAIN_TRACKS", "WATER_GATE")}
+for extra, node in (({}, "inactiveTrophy"), ({"DREAM_HOME": "complete", "LITTLE_ONI": "complete"}, "activeTrophy")):
+    saves = tempfile.mkdtemp(prefix="ci_check_")
+    write_save(saves + "/champion.sav", dict(done, **extra))
+    said, _ = converse("interior:trophyRoom", PEDESTALS["TROPHY_MASTER"], "ok", saves)
+    shutil.rmtree(saves, ignore_errors=True)
+    check(f"the Trophy Master's pedestal with {len(done) + len(extra)} quests done", said == [f"questTrophyMaster {node}"], f"{said}")
+
 if failures:
     print("\n".join(failures))
     sys.exit(1)

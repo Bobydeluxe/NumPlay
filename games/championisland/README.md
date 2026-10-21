@@ -22,7 +22,7 @@
 
 ## Highlights
 
-* **The whole island:** every path, house and cave of the original, with its 57 rooms, its people, their stories and side quests, and the four teams.
+* **The whole island:** every path, house and cave of the original, with its 57 rooms, its people, their stories, all 24 side quests and their trophies, and the four teams.
 * **All seven sports:** Table Tennis, Skateboarding, Archery, Rugby, Artistic Swimming, Marathon and Climbing, with the same rules, champions and harder versions as the original.
 * **The original's look:** every picture and animation comes from the doodle itself, down to the rain over the Table Tennis village and the island's opening scene.
 * **Full screen:** the island fills the calculator's whole screen, so you see more of it around Lucky than the original's wide frame shows. The sports and the insides of houses keep the original's frame.
@@ -83,7 +83,7 @@ Every sport shows its rules and keys before it starts. Back pauses it: from ther
 
 Inspired by the Doodle Champion Island Games (2021). Not affiliated with Google or STUDIO4°C.
 
-* The pictures, animations, maps and texts come from the doodle's own files, as kept in the [Google-Doodle-Champion-Island](https://github.com/potherca-blog/Google-Doodle-Champion-Island) archive by potherca-blog.
+* The pictures, animations, maps and texts come from the doodle's own files, as kept in the [Google-Doodle-Champion-Island](https://github.com/potherca-blog/Google-Doodle-Champion-Island) archive by potherca-blog, and from the doodle as Google serves it now, for the two side quests it gained in an update.
 * Font: [PixelMplus](https://itouhiro.github.io/PixelMplus/) by Itou Hiroki, based on the M+ fonts ([license](../../LICENSES/PixelMplus.txt)).
 
 Made by Mason Chen as part of NumPlay.

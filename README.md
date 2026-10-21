@@ -5,8 +5,8 @@
 <h1 align="center">NumPlay</h1>
 
 <p align="center">
-  <b>24 free games for your NumWorks calculator, in one app.</b><br>
-  Plus 15 big games that install on their own. For the N0110, N0115 and N0120, in English, French and Chinese.
+  <b>27 free games for your NumWorks calculator, in one app.</b><br>
+  Plus 17 big games that install on their own. For the N0110, N0115 and N0120, in English, French and Chinese.
 </p>
 
 <p align="center">
@@ -50,22 +50,27 @@ All of these come in one app, **NumPlay.nwa**.
     <td align="center"><a href="games/dinorun/README.md"><img src="docs/media/thumb_dinorun.png" width="120" alt="Chrome Dino"><br><b>Chrome Dino</b></a></td>
   </tr>
   <tr>
+    <td align="center"><a href="games/doodlejump/README.md"><img src="docs/media/thumb_doodlejump.png" width="120" alt="Doodle Jump"><br><b>Doodle Jump</b></a></td>
     <td align="center"><a href="games/chess/README.md"><img src="docs/media/thumb_chess.png" width="120" alt="Chess"><br><b>Chess</b></a></td>
     <td align="center"><a href="games/flappybird/README.md"><img src="docs/media/thumb_flappybird.png" width="120" alt="Flappy Bird"><br><b>Flappy Bird</b></a></td>
+    <td align="center"><a href="games/flappydunk/README.md"><img src="docs/media/thumb_flappydunk.png" width="120" alt="Flappy Dunk"><br><b>Flappy Dunk</b></a></td>
+    <td align="center"><a href="games/towerblock/README.md"><img src="docs/media/thumb_towerblock.png" width="120" alt="Tower Blocks"><br><b>Tower Blocks</b></a></td>
+  </tr>
+  <tr>
     <td align="center"><a href="games/pacman/README.md"><img src="docs/media/thumb_pacman.png" width="120" alt="Pac-Man"><br><b>Pac-Man</b></a></td>
     <td align="center"><a href="games/snake/README.md"><img src="docs/media/thumb_snake.png" width="120" alt="Snake"><br><b>Snake</b></a></td>
     <td align="center"><a href="games/connectfour/README.md"><img src="docs/media/thumb_connectfour.png" width="120" alt="Connect Four"><br><b>Connect Four</b></a></td>
-  </tr>
-  <tr>
     <td align="center"><a href="games/solitaire/README.md"><img src="docs/media/thumb_solitaire.png" width="120" alt="Solitaire"><br><b>Solitaire</b></a></td>
     <td align="center"><a href="games/g2048/README.md"><img src="docs/media/thumb_g2048.png" width="120" alt="2048"><br><b>2048</b></a></td>
+  </tr>
+  <tr>
     <td align="center"><a href="games/minesweeper/README.md"><img src="docs/media/thumb_minesweeper.png" width="120" alt="Minesweeper"><br><b>Minesweeper</b></a></td>
     <td align="center"><a href="games/breakout/README.md"><img src="docs/media/thumb_breakout.png" width="120" alt="Block Breaker"><br><b>Block Breaker</b></a></td>
     <td align="center"><a href="games/twoplayer/README.md"><img src="docs/media/thumb_twoplayer.png" width="120" alt="2 Players"><br><b>2 Players</b></a></td>
-  </tr>
-  <tr>
     <td align="center"><a href="games/invaders/README.md"><img src="docs/media/thumb_invaders.png" width="120" alt="Space Invaders"><br><b>Space Invaders</b></a></td>
     <td align="center"><a href="games/sudoku/README.md"><img src="docs/media/thumb_sudoku.png" width="120" alt="Sudoku"><br><b>Sudoku</b></a></td>
+  </tr>
+  <tr>
     <td align="center"><a href="games/uttt/README.md"><img src="docs/media/thumb_uttt.png" width="120" alt="Ultimate Tic-Tac-Toe"><br><b>Ultimate Tic-Tac-Toe</b></a></td>
     <td align="center"><a href="games/sokoban/README.md"><img src="docs/media/thumb_sokoban.png" width="120" alt="Sokoban"><br><b>Sokoban</b></a></td>
   </tr>
@@ -106,8 +111,11 @@ These are too big to fit next to NumPlay, so each one is its own app. Install it
     <td align="center"><a href="games/leveldevil/README.md"><img src="docs/media/thumb_leveldevil.png" width="200" alt="Level Devil"><br><b>Level Devil</b></a><br><sub>Unept's troll platformer: the game's 80 rooms, with their own traps</sub><br><a href="https://github.com/Mason363/NumPlay/releases/latest/download/LevelDevil.nwa">Download</a></td>
   </tr>
   <tr>
+    <td align="center"><a href="games/jetpackjoyride/README.md"><img src="docs/media/thumb_jetpackjoyride.png" width="200" alt="Jetpack Joyride"><br><b>Jetpack Joyride</b></a><br><sub>Barry's run through the lab, with the vehicles and the Final Spin</sub><br><a href="https://github.com/Mason363/NumPlay/releases/latest/download/JetpackJoyride.nwa">Download</a></td>
     <td align="center"><a href="https://github.com/Mason363/NumWorks-Super-Mario-64"><b>Super Mario 64</b></a><br><sub>In a repository of its own: NumWorks-Super-Mario-64</sub></td>
     <td align="center"><a href="games/supermariobros/README.md"><img src="docs/media/thumb_supermariobros.png" width="200" alt="Super Mario Bros."><br><b>Super Mario Bros.</b></a><br><sub>All 32 original stages, adapted by Bobydeluxe</sub><br><a href="https://github.com/Mason363/NumPlay/releases/latest/download/SuperMarioBros.nwa">Download</a></td>
+  </tr>
+  <tr>
     <td align="center"><a href="#roadmap"><b>More on the way</b></a><br><sub>Minecraft 1.18.2, Retro-Go and more: see the roadmap</sub></td>
   </tr>
 </table>
@@ -133,7 +141,7 @@ You need your calculator, its USB cable, and a computer with **Google Chrome** o
 | --- | --- | --- |
 | N0120 | Epsilon 23.2 or newer (the calculator's own software) | Everything |
 | N0110, N0115 | Epsilon 23.2 or newer | Everything. These models are about 2.5 times slower, so the big games show fewer frames per second, but they keep their speed. |
-| N0110, N0115 | Upsilon | NumPlay-Upsilon.nwa: 19 games (see Other versions) |
+| N0110, N0115 | Upsilon | NumPlay-Upsilon.nwa: 22 games (see Other versions) |
 | Any | Custom software built from Epsilon 25.2's source | Everything. These builds can give apps less memory (133 KB): on one that gives even less, a game that needs more says how much on its card. |
 
 To see your calculator's model and software, open **Settings**, then **About**. To update the software, go to [my.numworks.com](https://my.numworks.com) with the calculator plugged in.
@@ -149,7 +157,7 @@ To see your calculator's model and software, open **Settings**, then **About**. 
 | [NumPlay-Matrices.nwa](https://github.com/Mason363/NumPlay/releases/latest/download/NumPlay-Matrices.nwa) | The same app, in disguise: it looks like a math app called **Matrices**. |
 | [NumPlay-French.nwa](https://github.com/Mason363/NumPlay/releases/latest/download/NumPlay-French.nwa) | NumPlay en français : tous les jeux, en français. |
 | [NumPlay-Chinese.nwa](https://github.com/Mason363/NumPlay/releases/latest/download/NumPlay-Chinese.nwa) | NumPlay 中文版：所有游戏，简体中文。 |
-| [NumPlay-Upsilon.nwa](https://github.com/Mason363/NumPlay/releases/latest/download/NumPlay-Upsilon.nwa) | For calculators running **Upsilon**: the 19 games that fit in the memory it gives apps. |
+| [NumPlay-Upsilon.nwa](https://github.com/Mason363/NumPlay/releases/latest/download/NumPlay-Upsilon.nwa) | For calculators running **Upsilon**: the 22 games that fit in the memory it gives apps. |
 
 <img src="docs/media/home_invisible.png" width="240" alt="The home screen with NumPlay-Invisible: the spot after Settings looks empty"> <img src="docs/media/home_matrices.png" width="240" alt="The home screen with NumPlay-Matrices among the calculator's own apps">
 
@@ -234,6 +242,17 @@ Read **[Make your own NumWorks game](docs/make-a-game.md)** to go from there, an
 - [ ] Full Minecraft 1.18.2 as a standalone app
 - [ ] A customizer website: pick the games you want in your launcher, with Enlarged Extra Apps support to fit several big games, or big and small ones together
 - [ ] [Retro-Go](https://github.com/ducalex/retro-go) for Game Boy, NES and more: upload your own ROMs on the website and get a .nwa app that plays them
+- [ ] Among Us, against bots
+- [ ] Stickman Hook
+- [ ] Cat Ninja
+- [ ] A tower defense game: Kingdom Rush or Bloons TD
+- [ ] Into the Breach
+- [ ] A racing game: F1 or GT3
+- [ ] Ori and the Blind Forest
+- [ ] Bad Time Simulator: the Sans fight
+- [ ] A PICO-8 emulator: add your own .p8 games on the website
+- [ ] Hades
+- [ ] Super Smash Bros
 
 ## Credits
 
@@ -243,8 +262,11 @@ NumPlay is a fan project, made out of love for these games and for the NumWorks 
 - **[Gabriele Cirulli](https://github.com/gabrielecirulli/2048)** made 2048.
 - **[Bobydeluxe](https://github.com/Bobydeluxe)** made the **[Super Mario Bros.](games/supermariobros/README.md)** NumWorks adaptation. **Nintendo** created the original game, levels, characters and artwork. The native C engine is **[SMB-Vanilla](https://github.com/nukep/SMB-Vanilla)** by **nukep**, under GPL-3.0; source and asset credits are recorded in the game's [provenance notes](games/supermariobros/assets/README.md). Not affiliated with Nintendo.
 - **Block Blast!** by [Hungry Studio](https://www.hungrystudio.com) inspired NumPlay's Block Blast, written in C for NumPlay with no code or art from it. Its blocks, scoring and colours follow measurements of the app by the players behind [blockblast-Self-Improvement-loop](https://github.com/Kucze3205/blockblast-Self-Improvement-loop).
+- **Flappy Dunk** by Voodoo (made with Acid Cousins) inspired NumPlay's Flappy Dunk, written in C for NumPlay with no code or art from it. Its physics and hoops follow the numbers in the game's Android build. **[Bobydeluxe](https://github.com/Bobydeluxe)** brought it to NumPlay. Not affiliated with Voodoo.
+- **Tower Blocks** by [Steve Gardner](https://codepen.io/ste-vg/pen/ppLQNW) (MIT License) is ported to C for NumPlay from its source: its sizes, speeds, colours, light and camera are the original's. **[Bobydeluxe](https://github.com/Bobydeluxe)** brought it to NumPlay.
+- **Doodle Jump** by Lima Sky inspired NumPlay's Doodle Jump, written in C for NumPlay with no code or art from it, drawn in its style on its own page size. **[Bobydeluxe](https://github.com/Bobydeluxe)** brought it to NumPlay. Not affiliated with Lima Sky.
 - Snake, Solitaire and Block Breaker look and play like **Google's games** in Search. They are drawn from scratch; nothing is taken from Google.
-- **Chrome's dinosaur game** by Google inspired Chrome Dino, which ports its rules, numbers and pictures from [Chromium's source](https://chromium.googlesource.com/chromium/src/+/main/components/neterror/resources/dino_game/) (BSD license). **[LilyTheCatgirl](https://github.com/LilyTheCuteCatgirl)** brought it to NumPlay, and also made the live emulator (`tools/emu_live.py`) and the Windows builder. Not affiliated with Google.
+- **Chrome's dinosaur game** by Google inspired Chrome Dino, which ports its rules, numbers and pictures from [Chromium's source](https://chromium.googlesource.com/chromium/src/+/main/components/neterror/resources/dino_game/) (BSD license). **[LilyTheCatgirl](https://github.com/LilyTheCuteCatgirl)** brought it to NumPlay, and also made the live emulator (`tools/emulator.py`) and the builder (`tools/build.py`). Not affiliated with Google.
 - **[gd3ds](https://github.com/AleFunky/gd3ds)** by AleFunky and friends, whose research into Geometry Dash made NumDash possible. Clubstep, Deadlocked and Dash also rely on [gdsolver](https://github.com/gdsolver/gdsolver)'s measurements of Geometry Dash 2.2, level data from [gmdkit](https://github.com/UHDanke/gmdkit) by HDanke and checks against [GDRWeb](https://github.com/iliasHDZ/GDRWeb) by IliasHDZ.
 - **Balatro** by LocalThunk inspired NumPlay's Balatro, which uses art adapted from the game and the **m6x11** font by Daniel Linssen.
 - **Minecraft** by Mojang inspired NumBlocks, which follows Minecraft 1.8.8 exactly: it makes its worlds the way Minecraft 1.8.8 does and uses its blocks, items, recipes, textures, font and screens.
@@ -258,6 +280,7 @@ NumPlay is a fan project, made out of love for these games and for the NumWorks 
 - **Sonic the Hedgehog** by Sonic Team inspired NumPlay's Sonic the Hedgehog, which reads the game's art, levels and demos from the [Sonic Retro disassembly](https://github.com/sonicretro/s1disasm) and follows the [Sonic Physics Guide](https://info.sonicretro.org/Sonic_Physics_Guide). Not affiliated with SEGA.
 - **Subway Surfers** by SYBO and Kiloo inspired NumPlay's Subway Surfers: its people are fitted to the game's own 3D models and wear their textures, and its logo and item icons are the game's, as the [Subway Surfers Wiki](https://subwaysurf.fandom.com) shows them; the yard and the trains are drawn after the game. It is lettered in the **Lilita One** font by Juan Montoreano (SIL Open Font License, [license](LICENSES/OFL-1.1-LilitaOne.txt)). Not affiliated with them.
 - **Hill Climb Racing** by Fingersoft inspired NumPlay's Hill Climb Racing, which uses the game's own pictures from the [Hill Climb Racing Wiki](https://hillclimbracing.fandom.com), the **Teko** font (SIL Open Font License, [license](LICENSES/OFL-1.1-Teko.txt)) and **Box2D 2.2.1** by Erin Catto (zlib license, [license](games/hillclimb/src/box2d/License.txt)), the physics engine the game is built on. Not affiliated with Fingersoft.
+- **Jetpack Joyride** by Halfbrick inspired NumPlay's Jetpack Joyride, written in C for NumPlay with the game's own pictures (from Halfbrick's Facebook asset archive and the Android game) and its numbers, read from the game's files. **[Bobydeluxe](https://github.com/Bobydeluxe)** brought it to NumPlay. Not affiliated with Halfbrick.
 - **[Level Devil](https://store.steampowered.com/app/3242750/)** by Unept: NumPlay's Level Devil is written in C with no code from the game, but its 80 rooms (their tiles, traps and timing) are the game's own, taken from its web build by games/leveldevil/tools/fetch.py, and its runner is drawn from the game's sprites.
 
 - **Pong** by Atari (1972) inspired NumPlay's 2 Players, with air hockey, tanks in a maze in the spirit of Tank Trouble and the light cycles of Tron. All four are written in C for NumPlay and drawn from shapes, with no code or art from them.
@@ -270,7 +293,7 @@ NumPlay is a fan project, made out of love for these games and for the NumWorks 
 - **[The Powder Toy](https://powdertoy.co.uk)** inspired NumPowder, which ports its materials' behaviour, its font and its icons from [its source code](https://github.com/The-Powder-Toy/The-Powder-Toy) (GNU GPL v3.0), by Stanislaw K Skowronek, Simon Robertshaw and its contributors. Not affiliated with them.
 - **[The Final Earth 2](https://store.steampowered.com/app/1180130/The_Final_Earth_2/)** by [Florian van Strien](https://florianvanstrien.nl) inspired NumPlay's The Final Earth 2, which uses the game's own pictures, fonts and texts, with additional sprites by LukXD99. Not affiliated with him.
 - **Buckshot Roulette** by Mike Klubnika inspired NumPlay's Buckshot Roulette, whose scenes are rendered from the game through the Open Buckshot Roulette project (1503Dev). Fonts: Fake Receipt by Ray Larabie and Dot Matrix by Dionaea.
-- The **Doodle Champion Island Games** (2021) inspired Champion Island, which uses the doodle's own pictures, maps and texts from the [Google-Doodle-Champion-Island](https://github.com/potherca-blog/Google-Doodle-Champion-Island) archive by potherca-blog, and the **PixelMplus** font by Itou Hiroki ([license](LICENSES/PixelMplus.txt)).
+- The **Doodle Champion Island Games** (2021) inspired Champion Island, which uses the doodle's own pictures, maps and texts from the [Google-Doodle-Champion-Island](https://github.com/potherca-blog/Google-Doodle-Champion-Island) archive by potherca-blog and from the doodle as Google serves it now, and the **PixelMplus** font by Itou Hiroki ([license](LICENSES/PixelMplus.txt)).
 - **[Portal Returns](https://www.cemetech.net/downloads/files/1313/x1313)** by MateoConLechuga for the TI-84 Plus CE, with sprites by CKH4 and Portal Prelude chambers ported by Unicorn from BuilderBoy's original.
 - The **Nunito** and **Rammetto One** fonts, under the SIL Open Font License ([LICENSES](LICENSES)).
 - The **Fusion Pixel** font by TakWolf (with glyphs from **Ark Pixel**), under the SIL Open Font License ([license](LICENSES/OFL-1.1-Fusion-Pixel.txt)), for the Chinese letters.
@@ -284,7 +307,7 @@ NumPlay is a fan project, made out of love for these games and for the NumWorks 
 
 NumPlay is licensed under the [GNU General Public License v3.0](LICENSE). Copyright (c) 2026 Mason Chen. Code and fonts from others keep their own licenses: the `UNLICENSE` files in the games' folders and the [LICENSES](LICENSES) folder. The names, artwork and music of the games NumPlay is inspired by belong to their makers and are not covered by it.
 
-<sub>Unofficial fan games, not affiliated with NumWorks, RobTop Games (Geometry Dash), Hipster Whale (Crossy Road), the makers of Drive Mad, LocalThunk or Playstack (Balatro), Mike Klubnika or Critical Reflex (Buckshot Roulette), Hungry Studio (Block Blast!), Mojang or Microsoft (Minecraft), Maddy Makes Games (Celeste), Team Cherry (Hollow Knight), Toby Fox (Undertale), id Software (Doom), Edmund McMillen, Florian Himsl or Nicalis (The Binding of Isaac), PopCap Games or Electronic Arts (Plants vs. Zombies), Scott Cawthon (Five Nights at Freddy's), SEGA (Sonic the Hedgehog), SYBO or Kiloo (Subway Surfers), Fingersoft (Hill Climb Racing), Unept (Level Devil), Atari (Pong), Disney (Tron), Orteil or DashNet (Cookie Clicker), Taito or Midway (Space Invaders), Thinking Rabbit or Falcon (Sokoban), Florian van Strien (The Final Earth 2), The Powder Toy's developers (The Powder Toy), MateoConLechuga (Portal Returns), Valve (Portal), .GEARS (Flappy Bird), Bandai Namco (Pac-Man), Hasbro (Connect Four), Google (Snake, Solitaire, Block Breaker, Chrome Dino, Doodle Champion Island Games), STUDIO4°C or Microsoft (Minesweeper). Tetris is a trademark of The Tetris Company, Chrome of Google LLC, Minecraft of Mojang Synergies AB, Pac-Man of Bandai Namco, Connect Four of Hasbro, DOOM of ZeniMax Media, Sonic the Hedgehog of SEGA and Space Invaders of Taito.</sub>
+<sub>Unofficial fan games, not affiliated with NumWorks, RobTop Games (Geometry Dash), Hipster Whale (Crossy Road), the makers of Drive Mad, LocalThunk or Playstack (Balatro), Mike Klubnika or Critical Reflex (Buckshot Roulette), Hungry Studio (Block Blast!), Voodoo (Flappy Dunk), Lima Sky (Doodle Jump), Mojang or Microsoft (Minecraft), Maddy Makes Games (Celeste), Team Cherry (Hollow Knight), Toby Fox (Undertale), id Software (Doom), Edmund McMillen, Florian Himsl or Nicalis (The Binding of Isaac), PopCap Games or Electronic Arts (Plants vs. Zombies), Scott Cawthon (Five Nights at Freddy's), SEGA (Sonic the Hedgehog), SYBO or Kiloo (Subway Surfers), Fingersoft (Hill Climb Racing), Unept (Level Devil), Halfbrick (Jetpack Joyride), Atari (Pong), Disney (Tron), Orteil or DashNet (Cookie Clicker), Taito or Midway (Space Invaders), Thinking Rabbit or Falcon (Sokoban), Florian van Strien (The Final Earth 2), The Powder Toy's developers (The Powder Toy), MateoConLechuga (Portal Returns), Valve (Portal), .GEARS (Flappy Bird), Bandai Namco (Pac-Man), Hasbro (Connect Four), Google (Snake, Solitaire, Block Breaker, Chrome Dino, Doodle Champion Island Games), STUDIO4°C or Microsoft (Minesweeper). Tetris is a trademark of The Tetris Company, Chrome of Google LLC, Minecraft of Mojang Synergies AB, Pac-Man of Bandai Namco, Connect Four of Hasbro, DOOM of ZeniMax Media, Sonic the Hedgehog of SEGA and Space Invaders of Taito.</sub>
 
 ## Gallery
 
@@ -357,5 +380,11 @@ NumPlay is licensed under the [GNU General Public License v3.0](LICENSE). Copyri
   <tr>
     <td align="center"><img src="docs/media/gallery/uttt.gif" alt="Ultimate Tic-Tac-Toe: a game against the computer, which wins the middle board"><br><a href="games/uttt/README.md"><b>Ultimate Tic-Tac-Toe</b></a></td>
     <td align="center"><img src="docs/media/gallery/sokoban.gif" alt="Sokoban: Microban's ninth level, pushed through to its goals"><br><a href="games/sokoban/README.md"><b>Sokoban</b></a></td>
+    <td align="center"><img src="docs/media/gallery/flappydunk.gif" alt="Flappy Dunk: swishes in a row, the ball on fire"><br><a href="games/flappydunk/README.md"><b>Flappy Dunk</b></a></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/media/gallery/towerblock.gif" alt="Tower Blocks: blocks dropped on the tower, the overhangs falling away"><br><a href="games/towerblock/README.md"><b>Tower Blocks</b></a></td>
+    <td align="center"><img src="docs/media/gallery/doodlejump.gif" alt="Doodle Jump: the doodler climbs past blue platforms and a monster"><br><a href="games/doodlejump/README.md"><b>Doodle Jump</b></a></td>
+    <td align="center"><img src="docs/media/jetpackjoyride.gif" alt="Jetpack Joyride: lasers, a missile, then the Lil' Stomper"><br><a href="games/jetpackjoyride/README.md"><b>Jetpack Joyride</b></a></td>
   </tr>
 </table>

@@ -104,7 +104,9 @@ void gfx_sprite_ex(uint16_t sp, Mat m, uint8_t alpha, bool opaque_only) {
   Item *it = add();
   if (!it) return;
   *it = (Item){DI_SPRITE, alpha, 0, 0, (int16_t)x0, (int16_t)y0, (int16_t)x1, (int16_t)y1, sp, 0};
-  if (axis_aligned(m)) {
+  /* (an unrotated image the doodle squeezes by less than half a pixel, like the
+   * crabs filling the red pagoda, is drawn as it is: the screen can't show it) */
+  if (axis_aligned(m) || (fabsf(m.b) < 1e-4f && fabsf(m.c) < 1e-4f && fabsf(fabsf(m.a) - 1) * s.w < .5f && fabsf(fabsf(m.d) - 1) * s.h < .5f)) {
     if (s.kind == 1 && s.rle > STREAM_OVER && m.d > 0) it->kind = DI_STREAM;
     /* the canvas snaps unrotated images to whole pixels */
     int x = (int)floorf((m.a < 0 ? m.tx - s.w : m.tx) + 0.5f), y = (int)floorf((m.d < 0 ? m.ty - s.h : m.ty) + 0.5f);

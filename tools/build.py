@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Build NumPlay .nwa files on native Windows (no WSL/Linux required).
+"""Build NumPlay .nwa files on Windows, macOS and Linux.
 
 Requirements: Git for Windows (Git Bash), GNU Make 4.4.1 for Windows, Node.js/npm,
 Python, Rust/rustup and a native Windows arm-none-eabi-gcc toolchain.
 
-Run from PowerShell in the repository root:
-    python tools/build_windows.py --doctor
-    python tools/build_windows.py --launcher-only --skip-languages -j2
-    python tools/build_windows.py --organize-only --tidy-legacy
-    python tools/build_windows.py --watch --launcher-only --skip-languages -j2
+Run from PowerShell (Windows) or a terminal (macOS/Linux):
+    python tools/build.py --doctor
+    python tools/build.py --launcher-only --skip-languages -j2
+    python tools/build.py --organize-only
+    python tools/build.py --watch --launcher-only --skip-languages -j2
 
 It keeps Make's intermediate outputs untouched under build/ and atomically
-exports finished calculator apps into top-level dist/, including the stable
-live-emulator input dist/live/NumPlay.nwa. `--watch` monitors source edits and
+exports finished calculator apps into top-level build/compiled/, including the stable
+live-emulator input build/compiled/NumPlay.nwa. `--watch` monitors source edits and
 rebuilds incrementally, publishing only after successful builds. `--organize-only`
 exports an existing successful build with no toolchain necessary.
 
@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 import time
 import os
 from pathlib import Path
@@ -43,7 +44,7 @@ TOOL_URL = ("https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases
             f"download/v{TOOL_VERSION}/{TOOL_NAME}")
 TOOL_SHA256 = "bae6a3d1667697ce750c3b13d6d26d80973ecedc2cc87bf04869e83447fd93ea"
 ARM_BASE = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "NumPlay" / "toolchains"
-OUTPUT = ROOT / "dist"
+OUTPUT = ROOT / "build" / "compiled"
 RUST_TARGET = "thumbv7em-none-eabihf"
 
 # GnuWin32 Make 3.81 (often installed by winget) can crash with 0xc0000005
@@ -293,10 +294,10 @@ def doctor() -> bool:
     if not b:
         print("  Git for Windows: https://git-scm.com/downloads/win (includes Git Bash; NOT Linux)")
     if not make_ok:
-        print("  GNU Make 4.4.1: python tools/build_windows.py --install-make")
+        print("  GNU Make 4.4.1: python tools/build.py --install-make")
         print("  (Portable Windows binary; ~400 KB; no administrator privileges or PATH change)")
     if not arm:
-        print("  ARM compiler: python tools/build_windows.py --install-arm")
+        print("  ARM compiler: python tools/build.py --install-arm")
         print("  (Downloads official xPack Windows compiler, about 320 MB, SHA-256 verified)")
     if not node or not npx:
         print("  Node.js: winget install --id OpenJS.NodeJS.LTS -e")
@@ -445,7 +446,7 @@ def create_nwlink_bridge(shims: Path) -> Path:
 
 
 def run_bash(bash: Path, make: Path, make_name: str, arm: Path, jobs: int,
-             *, apps: bool, check: bool, langs: bool) -> None:
+             *, apps: bool, check: bool, langs: bool, target_args: list[str] | None = None) -> None:
     # Ensure make's directories exist even when build/ was created by an
     # interrupted earlier run. Keep all existing compiled files for a retry.
     created = ensure_build_directories()
@@ -485,19 +486,22 @@ command -v nwlink >/dev/null || { echo 'Tetris nwlink bridge is unavailable from
             if completed.returncode:
                 raise RuntimeError(f"GNU Make exited with code {completed.returncode} (build stopped)")
 
-        targets = ["nwa"]
-        if apps or check:
-            targets.append("apps")
-        if check:
-            targets.append("check")
-        invoke([f"-j{jobs}", *targets])
-        if langs:
-            invoke(["lang"])
+        if target_args is not None:
+            invoke([f"-j{jobs}", *target_args])
+        else:
+            targets = ["nwa"]
+            if apps or check:
+                targets.append("apps")
+            if check:
+                targets.append("check")
+            invoke([f"-j{jobs}", *targets])
+            if langs:
+                invoke(["lang"])
 
 
 # Publish end-user .nwa files outside Make's internal build/ directory.
 # build/ is intentionally left alone: NumPlay's Makefile hard-codes B = build.
-# The stable live path can later be supplied to emu_live.py for auto-reload.
+# The stable live path can later be supplied to emulator.py for auto-reload.
 LIVE_DIR = "live"
 VARIANT_DIR = "variants"
 GAME_DIR = "games"
@@ -509,9 +513,9 @@ def destination_for(name: str, output: Path) -> Path:
     if name == "NumPlay.nwa":
         return output / name
     if name in LANGUAGE_VARIANTS:
-        return output / LANGUAGE_DIR / name
+        return output / name
     if name.startswith("NumPlay-") and name.endswith(".nwa"):
-        return output / VARIANT_DIR / name
+        return output / name
     return output / GAME_DIR / name
 
 
@@ -549,7 +553,7 @@ def atomic_copy(src: Path, dest: Path) -> None:
 
 def collect_sources(*, apps: bool, langs: bool) -> list[Path]:
     build = ROOT / "build"
-    # Never include existing dist/ files: only fresh Makefile output sources.
+    # Never include existing build/compiled/ files: only fresh Makefile output sources.
     sources = list(sorted(build.glob("NumPlay*.nwa")))
     if not langs:
         sources = [p for p in sources if p.name not in LANGUAGE_VARIANTS]
@@ -578,29 +582,27 @@ def publish_outputs(*, apps: bool, langs: bool, output: Path = OUTPUT,
     # Publish user-facing variants and standalone games first.
     # Publish the stable live file *last*, marking the completed build.
     main_src = None
-    for src in sources:
+    ordered_sources = [p for p in sources if p.name != "NumPlay.nwa"]
+    ordered_sources += [p for p in sources if p.name == "NumPlay.nwa"]
+    for src in ordered_sources:
         if src.name == "NumPlay.nwa":
             main_src = src
         dest = destination_for(src.name, output)
         atomic_copy(src, dest)
         published.append(dest)
-    if main_src is not None:
-        live = output / LIVE_DIR / "NumPlay.nwa"
-        atomic_copy(main_src, live)
-        published.append(live)
     if verbose:
         print(f"\nSUCCESS: organized {len(sources)} calculator app(s) in:", output)
         for path in published:
             print("  " + str(path.relative_to(output)))
         if main_src:
-            print("\nStable live-emulator input: " + str(output / LIVE_DIR / "NumPlay.nwa"))
+            print("\nStable live-emulator input: " + str(output / "NumPlay.nwa"))
     return published
 
 
 def safe_remove_legacy_duplicates(output: Path = OUTPUT) -> None:
     """Opt-in cleanup of only byte-identical earlier exports in build/windows-nwa.
 
-    Do not delete anything that wasn't safely copied into dist/. No recursive
+    Do not delete anything that wasn't safely copied into build/compiled/. No recursive
     deletion; unknown or changed files are left exactly as they were.
     """
     legacy = ROOT / "build" / "windows-nwa"
@@ -686,7 +688,7 @@ def differences(a: dict, b: dict) -> list[str]:
 
 
 def run_watch(build_once, *, interval: float = 1.0,
-              settle: float = 1.0, root: Path = ROOT) -> None:
+              settle: float = 1.0, root: Path = ROOT, game: str | None = None) -> None:
     """Debounce editor save bursts; rebuild and publish only on success.
 
     No extra watchdog package needed. Capture the baseline after a build so
@@ -695,13 +697,22 @@ def run_watch(build_once, *, interval: float = 1.0,
     if interval <= 0 or settle <= 0:
         raise ValueError("watch interval and settle time must be positive")
     print("\nWatching NumPlay source files. Save an edit to rebuild; Ctrl+C to stop.")
-    print("Build failures keep the previous dist/live/NumPlay.nwa untouched.\n")
-    baseline = source_snapshot(root)
+    print("Build failures keep the previous build/compiled/NumPlay.nwa untouched.\n")
+    def snapshot():
+        files = source_snapshot(root)
+        if game is None:
+            return files
+        prefixes = (f"games/{game}/", "games/common/", "tools/")
+        shared = {"Makefile", "VERSION", "games/games.json"}
+        return {name: st for name, st in files.items()
+                if name in shared or name.startswith(prefixes)}
+
+    baseline = snapshot()
     pending: dict[str, tuple[int, int]] | None = None
     last_change = 0.0
     while True:
         time.sleep(interval)
-        current = source_snapshot(root)
+        current = snapshot()
         now = time.monotonic()
         if current == baseline:
             pending = None
@@ -720,110 +731,176 @@ def run_watch(build_once, *, interval: float = 1.0,
             print(f"  ... plus {len(changed) - 12} more")
         try:
             build_once()
-        except (OSError, RuntimeError) as exc:
-            print("\nBuild failed; keeping last good dist/live/NumPlay.nwa:", exc,
+        except (OSError, RuntimeError, subprocess.CalledProcessError, ValueError) as exc:
+            print("\nBuild failed; keeping last good build/compiled/ app:", exc,
                   file=sys.stderr, flush=True)
         # Rescan after build. Generated files, if any, become the new baseline.
         # A human edit made during the build may need a further save to trigger.
-        baseline = source_snapshot(root)
+        baseline = snapshot()
         pending = None
         print("\nWatching for the next edit...", flush=True)
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description="Build NumPlay .nwa apps on native Windows (no WSL).")
-    ap.add_argument("--doctor", action="store_true", help="check prerequisites, don't build")
-    ap.add_argument("--install-arm", action="store_true", help="download/verify official Windows ARM GCC")
-    ap.add_argument("--install-make", action="store_true", help="download/verify portable Windows GNU Make 4.4.1")
-    ap.add_argument("--make-zip", type=Path, metavar="ZIP", help="with --install-make, use a manually downloaded ZIP if SourceForge blocks Python")
-    ap.add_argument("--launcher-only", action="store_true", help="build only combined NumPlay variants")
-    ap.add_argument("--skip-check", action="store_true", help="skip linker/RAM checks")
-    ap.add_argument("--skip-languages", action="store_true", help="skip French/Chinese variants")
-    ap.add_argument("--organize-only", action="store_true", help="organize existing build outputs into dist/ without compiling")
-    ap.add_argument("--tidy-legacy", action="store_true", help="remove only verified duplicate .nwa files in build/windows-nwa/")
-    ap.add_argument("--watch", action="store_true", help="rebuild when source files change (Ctrl+C to stop)")
-    ap.add_argument("--watch-interval", type=float, default=1.0,
-                    help="seconds between source scans in watch mode (default 1.0)")
-    ap.add_argument("-j", "--jobs", type=int, default=4, help="parallel make jobs (default 4)")
-    a = ap.parse_args()
-    rust_bin = ensure_rust_on_path()
-    if rust_bin:
-        print(f"Found installed Rust at {rust_bin}; using it for this command "
-              "(no permanent PATH changes).", flush=True)
-    if a.jobs < 1 or a.jobs > 32:
-        ap.error("--jobs must be between 1 and 32")
-    if a.make_zip and not a.install_make:
-        ap.error("--make-zip requires --install-make")
-    if a.watch_interval <= 0:
-        ap.error("--watch-interval must be positive")
-    if a.watch and (a.organize_only or a.doctor or a.install_arm or a.install_make):
-        ap.error("--watch requires a normal build, not --doctor / --organize-only / installation")
-    if a.install_make:
-        try:
-            install_make(a.make_zip)
-        except (OSError, RuntimeError, zipfile.BadZipFile, urllib.error.URLError) as exc:
-            print("GNU Make installation failed:", exc, file=sys.stderr)
-            return 1
-        if not a.doctor and not a.install_arm:
-            print("Next: python tools/build_windows.py --doctor")
-            return 0
-    if a.install_arm:
-        try:
-            install_arm()
-        except (OSError, RuntimeError, zipfile.BadZipFile) as exc:
-            print("Compiler installation failed:", exc, file=sys.stderr)
-            return 1
-        if not a.doctor:
-            print("Next: python tools/build_windows.py --doctor")
-            return 0
-    if a.doctor:
-        return 0 if doctor() else 1
-    if a.organize_only:
-        try:
-            publish_outputs(apps=True, langs=True)
-            if a.tidy_legacy:
-                safe_remove_legacy_duplicates()
-            return 0
-        except (OSError, RuntimeError) as exc:
-            print("Could not organize build outputs:", exc, file=sys.stderr)
-            return 1
-    if not doctor():
-        return 1
-    make, make_name = find_make()
-    assert make and make_name and make_supported(make)
-    bash, arm = git_bash(), find_arm()
-    assert bash and arm
 
-    def build_once():
+
+# ---- Universal build entry point: native Windows, macOS and Linux ----
+
+def _nwlink() -> str:
+    found = shutil.which("nwlink")
+    if found:
+        return found
+    local = Path.home() / ".numplay" / "node_modules" / ".bin" / "nwlink"
+    if local.exists():
+        return str(local)
+    return "npx --yes -- nwlink@1.0.0"
+
+
+def _run_make(args: list[str], *, jobs: int) -> None:
+    print("Building:", " ".join(["make", f"-j{jobs}", *args]), flush=True)
+    if os.name == "nt":
+        make, make_name = find_make()
+        bash, arm = git_bash(), find_arm()
+        if not (make and make_name and bash and arm and make_supported(make)):
+            raise RuntimeError("Windows toolchain missing; run python tools/build.py --doctor")
+        run_bash(bash, make, make_name, arm, jobs, apps=False, check=False, langs=False,
+                 target_args=args)
+    else:
+        ensure_build_directories()
+        cmd = ["make", f"-j{jobs}", *args, "NWLINK=" + _nwlink()]
+        subprocess.run(cmd, check=True, cwd=ROOT)
+
+
+def _game_output(game: str) -> tuple[str, Path]:
+    import json
+    import re
+    manifest = json.loads((ROOT / "games" / "games.json").read_text(encoding="utf-8"))
+    labels = {g["id"]: g["app"] for g in manifest if g.get("app")}
+    for match in re.finditer(r"(?m)^APP_(\w+)\s*=\s*([^:\n]+):(\S+\.nwa)\s*$",
+                             (ROOT / "Makefile").read_text(encoding="utf-8")):
+        labels[match.group(1)] = match.group(3)
+    if game not in labels:
+        raise ValueError(f"Unknown standalone game '{game}'. Choices: " + ", ".join(sorted(labels)))
+    game_dir = ROOT / "games" / game
+    if not game_dir.is_dir():
+        raise ValueError(f"Missing game directory: {game}")
+    file = labels[game]
+    # Each game's own output: output/, output/device/ (NumDrive) or build/ (NumDash); Tetris, Cargo's.
+    candidate = [game_dir / "output" / f"{game}.nwa", game_dir / "output" / "device" / f"{game}.nwa",
+                 game_dir / "build" / f"{game}.nwa"]
+    if game == "tetris":
+        candidate = [ROOT / "build" / "apps" / "Tetris.nwa"]
+    return file, next((p for p in candidate if p.is_file()), candidate[0])
+
+
+def _publish_game(game: str) -> Path:
+    name, src = _game_output(game)
+    if not src.is_file():
+        raise RuntimeError(f"No successful game build found at {src}")
+    dst = OUTPUT / "games" / name
+    atomic_copy(src, dst)
+    print("Stable live-emulator input:", dst.relative_to(ROOT), flush=True)
+    return dst
+
+
+def _build_once(a) -> None:
+    if a.game:
+        if a.game == "tetris":
+            # Dedicated Cargo target: do not compile all NumPlay games.
+            # The Make recipe uses the existing Windows nwlink.exe bridge.
+            _run_make(["tetris-app"], jobs=a.jobs)
+            _publish_game("tetris")
+            return
+        _game_output(a.game)  # Fail before launching a compiler on invalid IDs.
+        _run_make(["-C", f"games/{a.game}", "build"], jobs=a.jobs)
+        _publish_game(a.game)
+        return
+    if os.name == "nt":
+        if not doctor():
+            raise RuntimeError("Windows requirements are not yet ready")
+        make, make_name = find_make()
+        bash, arm = git_bash(), find_arm()
+        assert make and make_name and bash and arm
         run_bash(bash, make, make_name, arm, a.jobs,
-                 apps=not a.launcher_only,
-                 check=not a.launcher_only and not a.skip_check,
+                 apps=not a.launcher_only, check=not a.skip_check and not a.launcher_only,
                  langs=not a.skip_languages)
-        publish_outputs(apps=not a.launcher_only, langs=not a.skip_languages)
-        if a.tidy_legacy:
-            safe_remove_legacy_duplicates()
+    else:
+        targets = ["nwa"]
+        if not a.launcher_only:
+            targets += ["apps"]
+        if not a.skip_check and not a.launcher_only:
+            targets += ["check"]
+        _run_make(targets, jobs=a.jobs)
+        if not a.skip_languages:
+            _run_make(["lang"], jobs=a.jobs)
+    sources = collect_sources(apps=not a.launcher_only, langs=not a.skip_languages)
+    publish_outputs(apps=not a.launcher_only, langs=not a.skip_languages)
+    if (ROOT / "build" / "compiled" / "NumPlay.nwa").is_file():
+        print("Stable live-emulator input: build/compiled/NumPlay.nwa", flush=True)
 
-    if a.watch:
-        try:
-            # Initial build then repeat on changes; failed initial build doesn't
-            # stop observation, and existing exports remain intact.
-            try:
-                build_once()
-            except (OSError, RuntimeError) as exc:
-                print("\nInitial build failed; old exported files were kept:", exc,
-                      file=sys.stderr, flush=True)
-            run_watch(build_once, interval=a.watch_interval)
-        except KeyboardInterrupt:
-            print("\nStopped watching. Compiled files remain in dist/.")
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="NumPlay unified build + live watch (Windows, macOS, Linux)")
+    ap.add_argument("--doctor", action="store_true")
+    ap.add_argument("--install-arm", action="store_true", help="Windows: install verified ARM compiler")
+    ap.add_argument("--install-make", action="store_true", help="Windows: install portable GNU Make")
+    ap.add_argument("--make-zip", type=Path)
+    ap.add_argument("--game", metavar="ID", help="compile one standalone game")
+    ap.add_argument("--launcher-only", action="store_true")
+    ap.add_argument("--skip-check", action="store_true")
+    ap.add_argument("--skip-languages", action="store_true")
+    ap.add_argument("--organize-only", action="store_true", help="publish existing successful .nwa files")
+    ap.add_argument("--watch", action="store_true", help="rebuild when source files change")
+    ap.add_argument("--once", action="store_true", help="alias for a normal one-time build")
+    ap.add_argument("--clean", action="store_true", help="make clean; removes generated build files")
+    ap.add_argument("--watch-interval", type=float, default=1.0)
+    ap.add_argument("-j", "--jobs", type=int, default=2)
+    a = ap.parse_args()
+    if a.jobs < 1 or a.jobs > 32 or a.watch_interval <= 0:
+        ap.error("jobs must be 1..32 and watch interval must be positive")
+    if os.name == "nt":
+        # Older PowerShell windows may not inherit ~/.cargo/bin in their PATH.
+        ensure_rust_on_path()
+    if a.doctor:
+        if os.name == "nt":
+            return 0 if doctor() else 1
+        return subprocess.call([sys.executable, str(ROOT / "tools" / "setup.py"), "--check"])
+    if a.install_arm or a.install_make:
+        if os.name != "nt":
+            ap.error("Windows installers are Windows-only; use tools/setup.py")
+        if a.install_arm:
+            install_arm()
+        if a.install_make:
+            install_make(a.make_zip)
         return 0
+    if a.clean:
+        # Do not call `make clean`: several game recipes erase local build/
+        # folders also used by host tests (including host-saves).
+        for location in (OUTPUT,):
+            if location.is_symlink():
+                raise RuntimeError(f"Refusing to clean symlink: {location}")
+            if location.is_dir():
+                shutil.rmtree(location)
+                print("Removed disposable build directory:", location.relative_to(ROOT))
+        print("Kept game-local folders and ~/.numplay-emulator/ (saves and settings).")
+        return 0
+    if a.organize_only:
+        publish_outputs(apps=True, langs=True)
+        return 0
+    if a.game and a.launcher_only:
+        ap.error("--game and --launcher-only are mutually exclusive")
     try:
-        build_once()
-        return 0
-    except (OSError, RuntimeError) as exc:
-        print("\nWindows build failed:", exc, file=sys.stderr)
-        print("The original source files and your emulator have not been modified.", file=sys.stderr)
-        return 1
+        _build_once(a)
+    except (OSError, RuntimeError, subprocess.CalledProcessError, ValueError) as exc:
+        print("Build failed; the last good .nwa stays untouched:", exc, file=sys.stderr, flush=True)
+        if not a.watch:
+            return 1
+    if a.watch and not a.once:
+        try:
+            run_watch(lambda: _build_once(a), interval=a.watch_interval, game=a.game)
+        except KeyboardInterrupt:
+            return 0
+    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

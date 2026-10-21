@@ -10,7 +10,7 @@ COMMON = $(CORE) src/ui.c src/app.c src/menu.c src/play.c src/editor.c
 DEVICE_SOURCES = $(COMMON) src/platform_eadk.c src/main.c
 DEVICE_OBJECTS = $(patsubst src/%.c,build/arm/%.o,$(DEVICE_SOURCES))
 HEADERS = $(wildcard src/*.h) ../common/np_text.h
-ARM_FLAGS = -std=c11 -O2 -fno-math-errno $(WARN) -ffunction-sections -fdata-sections -flto -fno-fat-lto-objects -fwhole-program -fvisibility=internal $(shell $(NWLINK) eadk-cflags-device 2>/dev/null)
+ARM_FLAGS = -std=c11 -Os -fno-math-errno $(WARN) -ffunction-sections -fdata-sections -flto -fno-fat-lto-objects -fwhole-program -fvisibility=internal $(shell $(NWLINK) eadk-cflags-device 2>/dev/null)
 ARM_LINK = -Wl,--relocatable -nostartfiles --specs=nano.specs -Wl,--gc-sections -Wl,-e,main -Wl,-u,eadk_app_name -Wl,-u,eadk_app_icon -Wl,-u,eadk_api_level -flinker-output=nolto-rel
 .PHONY: all build simulator test check clean levels assets run epsilon-app
 all: build

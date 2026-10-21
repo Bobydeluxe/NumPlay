@@ -1,4 +1,5 @@
 /* Fancade script interpreter. */
+#pragma GCC optimize ("O2")  /* (drawn every frame: fast, while the rest of the game is built small) */
 #include <string.h>
 #ifdef HOST
 #include <stdio.h>

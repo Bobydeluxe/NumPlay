@@ -12,7 +12,7 @@ What it gets:
 - nwlink 1.0.0 (NumWorks' tool that turns a program into a .nwa app), with npm, from Node.js;
 - the Python packages of the tools and the emulator (Pillow, NumPy, pyelftools, Unicorn, zopfli).
 It needs Python 3.9 or newer and Node.js (https://nodejs.org) already installed, and GNU make (on macOS,
-`xcode-select --install`; on Windows, see tools/build_windows.py). Rust is only needed for Tetris.
+`xcode-select --install`; on Windows, see tools/build.py). Rust is only needed for Tetris.
 """
 import argparse
 import hashlib
@@ -119,7 +119,7 @@ def main():
             [sys.executable, "-c", f"import {m}"], capture_output=True).returncode]
     say(not missing, "Python packages (Pillow, NumPy, pyelftools, Unicorn, zopfli)",
         f"{sys.executable} -m pip install {' '.join(missing)}")
-    say(bool(shutil.which("make")), "GNU make", "macOS: xcode-select --install; Windows: tools/build_windows.py")
+    say(bool(shutil.which("make")), "GNU make", "macOS: xcode-select --install; Windows: tools/build.py")
     say(bool(shutil.which("cargo")), "Rust (only for Tetris)", "https://rustup.rs, then: rustup target add "
         "thumbv7em-none-eabihf")
 

@@ -14,7 +14,7 @@ CFLAGS = -std=gnu11 -Wall -Wno-unused-function -fsingle-precision-constant
 ifeq ($(PLATFORM),device)
 CC = arm-none-eabi-gcc
 TARGET = $(BUILD_DIR)/numdrive.nwa
-CFLAGS += $(shell $(NWLINK) eadk-cflags-device) -O2
+CFLAGS += $(shell $(NWLINK) eadk-cflags-device) -Os
 CFLAGS += -flto -flto-partition=one -fno-fat-lto-objects -fwhole-program -fvisibility=internal -fno-math-errno -fno-ident
 LDFLAGS = $(shell $(NWLINK) eadk-ldflags-device) --specs=nano.specs
 LDFLAGS += -Wl,-e,main -Wl,-u,eadk_app_name -Wl,-u,eadk_app_icon -Wl,-u,eadk_api_level -Wl,--gc-sections

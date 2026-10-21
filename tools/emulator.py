@@ -1,33 +1,16 @@
 #!/usr/bin/env python3
-"""Live NumWorks emulator for macOS, Linux and Windows: a calculator you can click, around tools/emu.py.
+"""The NumWorks emulator in a window, for macOS, Linux and Windows: a calculator you can click, around tools/emu.py.
 
-Put this file beside tools/emu.py. Requires Pillow, numpy, unicorn,
-pyelftools and nwlink (tkinterdnd2 for dropping files, if you like). It shows a
-picture of the NumWorks N0120 (emu_live_calculator.webp, beside this file), with the
-screen and every key where they are on it.
+Requires Pillow, numpy, unicorn, pyelftools and nwlink (tkinterdnd2 for dropping files, if you like). It shows a
+picture of the NumWorks N0120 (emu_live_calculator.webp, beside this file), with the screen and every key where
+they are on it, and runs any .nwa through tools/emu.py's Calculator.
 
-Runs an ARM .nwa through the project's existing emu.Calculator, shows the
-320x240 display, supports 46 clickable keys, keyboard, .nwa drops and reload.
+    python3 tools/emulator.py path/to/NumPlay.nwa      # one app
+    python3 tools/emulator.py --live                   # Live development: builds again when you save
+    python3 tools/emulator.py --headless app.nwa ...   # tools/emu.py's own options, without a window
 
-To run:
-    python tools/emu_live.py path/to/NumPlay.nwa
-
-The calculator skin does not depend on emu_live_skin.py; emu.py is still needed.
-
-What it does:
-- Single file / Live development: it builds again when you save, and reloads
-  (tools/watch.py on macOS and Linux, tools/build_windows.py on Windows);
-- calculator skin / pixel-exact 320x240 screen, keyboard highlights;
-- tear-reduced frame presentation, usable Epsilon firmware text;
-- N0120 display-transfer timings calibrated using physical NumWorks results;
-- fixed 550 MHz N0120 / 216 MHz older-model baseline (approximate timing);
-- optional host-adaptive clock and opt-in speed diagnostics;
-- manual confirmed USB upload with a live progress bar and USB activity log;
-- installer percentages are shown only when nwlink actually reports them.
-
-This is not a cycle-accurate Cortex-M7 emulator: demanding NumDrive scenes can
-still be host-CPU-limited. This release excludes the experimental SRAM hooks and
-LCD scanout simulation. Saves and crash logs remain outside build/ and dist/.
+Live development builds with tools/build.py, which puts the finished apps in build/compiled/ (NumPlay.nwa and
+the other versions, games/ for each game on its own); pick any of them to build and run just that one.
 """
 from __future__ import annotations
 
@@ -61,18 +44,15 @@ except ImportError:
     DND_FILES = None
     TkinterDnD = None
 
-# emu.py is a sibling file when installed in the repository's tools folder.
-try:
-    import emu
-except ImportError as exc:
-    raise SystemExit("Put emu_live.py inside NumPlay/tools/, beside emu.py. "
-                     f"Import failed: {exc}") from exc
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import emu  # noqa: E402  (the ARM emulator: the CPU, the screen, the keys, the files)
+
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 HOME_NWA = Path.home() / "Downloads" / "nwa"
 SAVE_DIR = Path.home() / ".numplay-emulator" / "saves"
-LIVE_NWA = REPO_ROOT / "dist" / "live" / "NumPlay.nwa"
-BUILD_SCRIPT = REPO_ROOT / "tools" / ("build_windows.py" if os.name == "nt" else "watch.py")
+LIVE_NWA = REPO_ROOT / "build" / "compiled" / "NumPlay.nwa"
+BUILD_SCRIPT = REPO_ROOT / "tools" / "build.py"
 LCD_WIDTH = 320
 LCD_HEIGHT = 240
 FRAME_VIRTUAL_MS = 32
@@ -208,11 +188,11 @@ def validate_layout():
 def find_nwas() -> list[Path]:
     """Quick bounded discovery: local builds and the user's normal download folder."""
     patterns = (
-        REPO_ROOT / "dist" / "live" / "*.nwa",
-        REPO_ROOT / "dist" / "*.nwa",
-        REPO_ROOT / "dist" / "games" / "*.nwa",
-        REPO_ROOT / "dist" / "variants" / "*.nwa",
-        REPO_ROOT / "dist" / "languages" / "*.nwa",
+        REPO_ROOT / "build" / "compiled" / "live" / "*.nwa",
+        REPO_ROOT / "build" / "compiled" / "*.nwa",
+        REPO_ROOT / "build" / "compiled" / "games" / "*.nwa",
+        REPO_ROOT / "build" / "compiled" / "variants" / "*.nwa",
+        REPO_ROOT / "build" / "compiled" / "languages" / "*.nwa",
         REPO_ROOT / "build" / "*.nwa",
         REPO_ROOT / "build" / "apps" / "*.nwa",
         REPO_ROOT / "games" / "*" / "output" / "*.nwa",
@@ -369,7 +349,7 @@ class FidelityFont:
 class TracedCalculator(emu.Calculator):
     """Keep the headless emulator intact, but yield on time-changing syscalls.
 
-    In emu.py, Calculator.run() requests a full millisecond of ARM *instructions*
+    In emulator.py, Calculator.run() requests a full millisecond of ARM *instructions*
     at once. A program can call eadk_timing_msleep(16) hundreds of times before
     that instruction budget expires. Each call immediately advances now_ms, so
     a single emu_start() can advance several *seconds* of virtual time. A 2ms
@@ -644,14 +624,14 @@ class TracedCalculator(emu.Calculator):
                           file=sys.stderr, flush=True)
 
         if svc == 23 and delta_ms >= 1:
-            # emu.py's 'no event' path adds 10ms, but does not mark the
+            # emulator.py's 'no event' path adds 10ms, but does not mark the
             # interval as idle. Correct the worker's CPU-load measurement.
             self.slept_ms += delta_ms
 
         if svc in self.TIME_ADVANCING_SVCS and delta_ms >= 0.5:
             self.last_svc_yield = (svc, pc - 2, delta_ms)
             self.svc_yield_count += 1
-            # emu.py unconditionally adds +1ms after emu_start() returns,
+            # emulator.py unconditionally adds +1ms after emu_start() returns,
             # assuming its entire instruction budget ran. We deliberately
             # stopped before the budget was exhausted. Cancel that extra ms
             # now; the backend adds it back immediately after emu_stop().
@@ -1221,7 +1201,7 @@ class LiveApp:
     def screenshot(self):
         if self._screen_rgb is None:
             return
-        directory = REPO_ROOT / "build" / "emu-live"
+        directory = REPO_ROOT / "build" / "data" / "emulator"
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / f"{self.current.stem if self.current else 'screen'}-{int(time.time())}.png"
         self._screen_rgb.save(path)
@@ -1825,6 +1805,20 @@ class CalculatorSkinApp(LiveApp):
             menu = ttk.OptionMenu(grid, var, var.get(), *values, command=lambda _v, c=command: c())
             menu.grid(row=row, column=1, sticky="e", pady=3)
 
+        # Quick compiled app picker (only files from build/compiled).
+        self._section(inner, "Compiled Games")
+        self._compiled_choice = tk.StringVar(master=self.root, value="NumPlay.nwa")
+        self._compiled_picker = ttk.Combobox(inner, textvariable=self._compiled_choice,
+                                             state="readonly", width=30)
+        self._compiled_picker.pack(fill="x", pady=(2, 4))
+        self._compiled_picker.bind("<Button-1>", lambda _e: self._refresh_compiled_games())
+        self._compiled_picker.bind("<<ComboboxSelected>>", self._on_compiled_selection_changed)
+        self._refresh_compiled_games()
+        actions = tk.Frame(inner, bg=PANEL)
+        actions.pack(fill="x", pady=(0, 3))
+        ttk.Button(actions, text="Run", command=self._run_compiled_selection).pack(side="left")
+        ttk.Button(actions, text="Build + Run", command=self._build_compiled_selection).pack(side="left", padx=(5, 0))
+
         # Live Build
         self._section(inner, "Live Build")
         ttk.Checkbutton(inner, text="Rebuild and reload when I save", variable=self.live_var,
@@ -2093,9 +2087,23 @@ class CalculatorSkinApp(LiveApp):
                 style = ttk.Style(self.root)
                 style.theme_use("clam")
                 style.configure(".", background=PANEL, foreground=FG)
-                style.configure("TButton", background=PANEL_2)
+                style.configure("TButton", background=PANEL_2, foreground=FG)
+                style.map("TButton",
+                          foreground=[("disabled", MUTED), ("pressed", FG), ("active", FG)],
+                          background=[("pressed", SELECT), ("active", HOVER)])
                 style.configure("TCheckbutton", background=PANEL, foreground=FG)
+                style.map("TCheckbutton",
+                          foreground=[("disabled", MUTED), ("active", FG)],
+                          background=[("active", PANEL)])
                 style.configure("TMenubutton", background=PANEL_2, foreground=FG)
+                style.map("TMenubutton",
+                          foreground=[("disabled", MUTED), ("pressed", FG), ("active", FG)],
+                          background=[("pressed", SELECT), ("active", HOVER)])
+                style.configure("TCombobox", foreground=FG, fieldbackground=PANEL_2,
+                                background=PANEL_2, arrowcolor=FG)
+                style.map("TCombobox", foreground=[("readonly", FG), ("disabled", MUTED)],
+                          fieldbackground=[("readonly", PANEL_2)],
+                          background=[("active", HOVER)])
                 style.configure("Horizontal.TProgressbar", background=ACCENT, troughcolor=PANEL_2)
             except tk.TclError:
                 pass
@@ -2137,6 +2145,81 @@ class CalculatorSkinApp(LiveApp):
             self._set_build_state("Off", "Opens one .nwa. Turn this on to build NumPlay again each time you save "
                                   "a file, and reload it.")
 
+    def _compiled_choices(self):
+        """Offer every known app before it has been built, not just files on disk.
+
+        A game is built on demand by `tools/build.py --game ID`. Discover its
+        release filename from the manifest and the same APP_ assignments used
+        by the root Makefile, including special-layout games.
+        """
+        root = REPO_ROOT / "build" / "compiled"
+        filenames = [
+            "NumPlay.nwa", "NumPlay-Invisible.nwa", "NumPlay-Matrices.nwa",
+            "NumPlay-Upsilon.nwa", "NumPlay-French.nwa", "NumPlay-Chinese.nwa",
+        ]
+        manifest = json.loads((REPO_ROOT / "games" / "games.json").read_text(encoding="utf-8"))
+        game_names = {record["app"] for record in manifest if record.get("app")}
+        makefile = (REPO_ROOT / "Makefile").read_text(encoding="utf-8")
+        game_names.update(re.findall(
+            r"(?m)^APP_\w+\s*=\s*[^:\n]+:(\S+\.nwa)\s*$", makefile))
+        filenames.extend("games/" + name for name in sorted(game_names, key=str.casefold))
+        # Keep any existing nonstandard exported files reachable, too.
+        filenames.extend(p.relative_to(root).as_posix() for p in root.glob("NumPlay-*.nwa") if p.is_file())
+        filenames.extend(p.relative_to(root).as_posix() for p in (root / "games").glob("*.nwa") if p.is_file())
+        return [root / name for name in dict.fromkeys(filenames)]
+
+    def _refresh_compiled_games(self):
+        paths = self._compiled_choices()
+        self._compiled_paths = {str(p.relative_to(REPO_ROOT / "build" / "compiled")): p for p in paths}
+        self._compiled_picker.configure(values=list(self._compiled_paths))
+        if not self._compiled_choice.get() or self._compiled_choice.get() not in self._compiled_paths:
+            if self._compiled_paths:
+                self._compiled_choice.set(next(iter(self._compiled_paths)))
+
+    def _on_compiled_selection_changed(self, _event=None):
+        """Retarget an active live watcher; never let two builds run together."""
+        if self.mode_var.get() != "live" or self._closing:
+            return
+        selected = self._compiled_choice.get()
+        self._stop_builder()
+        self._set_build_state("Switching live target", selected, busy=True)
+        # _start_builder waits for the stopped process tree on Windows before
+        # starting a new compiler. It reads the *current* selection then.
+        self._start_builder()
+
+    def _selected_compiled_path(self):
+        return (REPO_ROOT / "build" / "compiled" / self._compiled_choice.get()).resolve()
+
+    def _game_id_for_compiled(self, path):
+        import json
+        if path.parent.name != "games":
+            return None
+        manifest = json.loads((REPO_ROOT / "games" / "games.json").read_text(encoding="utf-8"))
+        for record in manifest:
+            if record.get("app") == path.name:
+                return record["id"]
+        for item in re.finditer(r"(?m)^APP_(\w+)\s*=\s*[^:\n]+:(\S+\.nwa)\s*$",
+                                (REPO_ROOT / "Makefile").read_text(encoding="utf-8")):
+            if item.group(2) == path.name:
+                return item.group(1)
+        return None
+
+    def _run_compiled_selection(self):
+        path = self._selected_compiled_path()
+        if not path.is_file():
+            self._set_build_state("Not built yet", "Build the selected app first", error=True)
+            return
+        self.mode_var.set("file")
+        self._switch_mode()
+        self.load(path)
+
+    def _build_compiled_selection(self):
+        if self.mode_var.get() == "live":
+            self._stop_builder()
+        self.mode_var.set("live")
+        self.live_var.set(True)
+        self._switch_mode()
+
     def _switch_mode(self):
         self._configure_mode_panel()
         self.watch_candidate = None
@@ -2169,9 +2252,9 @@ class CalculatorSkinApp(LiveApp):
         if self._closing:
             return
         if (self.mode_var.get() == "live" and self.watch_var.get() and
-                self._builder_ready and self.current == LIVE_NWA):
+                self._builder_ready and self.current == self._selected_compiled_path()):
             try:
-                self._maybe_reload(LIVE_NWA)
+                self._maybe_reload(self._selected_compiled_path())
             except OSError as exc:
                 self.build_status.set("Live reload check failed")
                 self.build_detail.set(str(exc)[:140])
@@ -2233,8 +2316,19 @@ class CalculatorSkinApp(LiveApp):
         self._builder_log.clear()
         self.watch_candidate = None
         self.watch_var.set(True)
-        cmd = [sys.executable, "-u", str(BUILD_SCRIPT), "--watch",
-               "--launcher-only", "--skip-languages", "-j2"]
+        selected = self._selected_compiled_path()
+        game_id = self._game_id_for_compiled(selected) if selected else None
+        if selected.parent.name == "games" and not game_id:
+            self._set_build_state("Unknown standalone game", selected.name, error=True)
+            return
+        cmd = [sys.executable, "-u", str(BUILD_SCRIPT), "--watch", "-j2"]
+        if game_id:
+            # Only this game's sources compile; no full NumPlay launcher rebuild.
+            cmd.extend(["--game", game_id])
+        else:
+            cmd.append("--launcher-only")
+            if selected.name not in ("NumPlay-French.nwa", "NumPlay-Chinese.nwa"):
+                cmd.append("--skip-languages")
         flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
         try:
             self.build_process = subprocess.Popen(cmd, cwd=str(REPO_ROOT),
@@ -2342,11 +2436,11 @@ class CalculatorSkinApp(LiveApp):
             elif "Stable live-emulator input:" in line:
                 self._builder_has_error = False
                 self._builder_ready = True
-                self._set_build_state("Built", "Reloading dist/live/NumPlay.nwa", busy=False)
-                if self.mode_var.get() == "live" and LIVE_NWA.is_file():
+                self._set_build_state("Built", f"Reloading {self._compiled_choice.get()}", busy=False)
+                if self.mode_var.get() == "live" and self._selected_compiled_path().is_file():
                     # Emulation runs in its own thread and will stop gracefully
                     # before loading the atomically replaced file.
-                    self.load(LIVE_NWA)
+                    self.load(self._selected_compiled_path())
             elif ("Build failed;" in line or "Initial build failed" in line or
                   "Windows build failed:" in line):
                 self._builder_has_error = True
@@ -2408,7 +2502,7 @@ class CalculatorSkinApp(LiveApp):
         win.protocol("WM_DELETE_WINDOW", close)
 
     def _open_dist(self):
-        path = REPO_ROOT / "dist"
+        path = REPO_ROOT / "build" / "compiled"
         path.mkdir(parents=True, exist_ok=True)
         if os.name == "nt":
             os.startfile(str(path))
@@ -2422,7 +2516,7 @@ class CalculatorSkinApp(LiveApp):
         if self.mode_var.get() == "live":
             if self._builder_busy or not self._builder_ready:
                 return None
-            return LIVE_NWA
+            return self._selected_compiled_path()
         return self.current
 
     def _update_upload_controls(self):
@@ -3052,7 +3146,7 @@ def main():
         print("Tip: pip install tkinterdnd2 for .nwa drag-and-drop.")
     start_live = args.live or args.follow_newest
     if start_live and args.nwa:
-        print("[NumPlay] --live uses dist/live/NumPlay.nwa; ignoring the supplied single-file path.")
+        print("[NumPlay] --live uses build/compiled/NumPlay.nwa; ignoring the supplied single-file path.")
     CalculatorSkinApp(root, None if start_live else args.nwa, args.nwlink,
                       args.model, args.system, False, art,
                       max_sleep_ms=args.max_sleep_ms, profile_speed=args.profile_speed,
@@ -3060,5 +3154,20 @@ def main():
     root.mainloop()
 
 
+
+
+# Previous headless CLI flags continue to work with this single file.
+def _run_headless_cli():
+    options = ("--ms", "--keys", "--shots", "--gif", "--fps", "--out",
+               "--storage", "--flash-start", "--ram-length", "--records",
+               "--frames", "--profile")
+    return "--headless" in sys.argv or any(arg.split("=", 1)[0] in options for arg in sys.argv[1:])
+
+
 if __name__ == "__main__":
-    main()
+    if _run_headless_cli():
+        if "--headless" in sys.argv:
+            sys.argv.remove("--headless")
+        emu.main()
+    else:
+        main()

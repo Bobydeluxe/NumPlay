@@ -1429,6 +1429,39 @@ static uint8_t *decode_flat_to_slot(int cache_slot, int picnum) {
     return flat_data;
 }
 
+#if NUMWORKS
+// far floors and ceilings: the flat made smaller (tools/mips.py packs 32 x 32, 16 x 16 and 8 x 8 of each flat next to
+// the WHX, each pixel what the texels under it average to). Where a row's texels are more than one to a pixel apart,
+// the full flat gives one of them, a different one each time the view moves a little (far lights flicker and jump);
+// the smaller copy whose texels are about a pixel apart gives what they average to. Nearer rows are vanilla's.
+extern "C" const uint8_t doom_mips[];
+extern "C" lumpindex_t numflats;
+#define NW_MIP_STRIDE (32 * 32 + 16 * 16 + 8 * 8)
+static const uint8_t *nw_mips_base;
+static int8_t nw_mips_ok = -1;
+
+static const uint8_t *nw_flat_mips(int picnum) {
+    if (nw_mips_ok < 0) {
+        // (the build's mips are for its flats: as many as the WHX has)
+        const uint8_t *m = doom_mips;
+        nw_mips_ok = m[0] == 'N' && m[1] == 'W' && m[2] == 'M' && m[3] == 'P' && (m[4] | m[5] << 8) == numflats;
+        nw_mips_base = m + 8;
+    }
+    return nw_mips_ok ? nw_mips_base + picnum * NW_MIP_STRIDE : nullptr;
+}
+
+// a run of a row from the flat at level K (64 >> K texels square; flats are stored a column at a time, flat[x * size
+// + y], and the packed position has x's 6.10 in its top half and y's in its bottom one, as R_DrawSpan has them)
+template<int K> static inline void nw_flat_run(uint8_t *p, uint8_t *p_end, uint32_t position, uint32_t step,
+                                               const uint8_t *src, const lighttable_t *colormap) {
+    constexpr uint32_t S = 64 >> K;
+    while (p < p_end) {
+        *p++ = colormap[src[((position >> (20 + 2 * K)) & ((S - 1) << (6 - K))) | ((position >> (10 + K)) & (S - 1))]];
+        position += step;
+    }
+}
+#endif
+
 static void flush_visplanes(int8_t *flatnum_next, int numvisplanes) {
 //    printf("FRAME %d %d\n", pd_frame, numvisplanes);
     angle_t angle = (viewangle + x_to_viewangle(0)) >> ANGLETOFINESHIFT;
@@ -1438,6 +1471,16 @@ static void flush_visplanes(int8_t *flatnum_next, int numvisplanes) {
     const fixed_t distscale0 = distscale(0); //0x00016a75; // todo i guess this is screen size based
     viewcosangle = FixedMul(distscale0, viewcosangle);
     viewsinangle = FixedMul(distscale0, viewsinangle);
+#endif
+#if NUMWORKS
+    // (the distance from which a row's texels are more than a pixel apart, and the smaller flats are drawn)
+    fixed_t mip_from = centerx << FRACBITS;
+#if HOST
+    // (tests: NWNOMIPS=1 draws vanilla's flats everywhere)
+    static int no_mips = -1;
+    if (no_mips < 0) no_mips = getenv("NWNOMIPS") != nullptr;
+    if (no_mips) mip_from = 0x1fffffff;
+#endif
 #endif
     // two passes; first pass we try to reuse flats we have decoded
     int cache_slot = 0;
@@ -1512,12 +1555,21 @@ static void flush_visplanes(int8_t *flatnum_next, int numvisplanes) {
                     // at its own first pixel, and the packed position carries from y into x as in vanilla (the flat is
                     // stored a column at a time, flat[x * 64 + y])
                     fixed_t distance = 0;
+                    const uint8_t *mips = nw_flat_mips(picnum), *src = flat_data;
+                    int level = 0;
                     for (int16_t fr = visplane_heads[vp]; fr != -1; fr = flat_runs[fr].next) {
                         int y = flat_runs[fr].y, x1 = flat_runs[fr].x_true;
                         if (y != last_y) {
                             distance = FixedMul(rel_height, yslope[y]);
                             xstep = FixedMul(distance, basexscale);
                             ystep = FixedMul(distance, baseyscale);
+                            // (the texels are distance / centerx apart along the row)
+                            level = 0;
+                            src = flat_data;
+                            if (mips && distance > mip_from) {
+                                level = distance > mip_from * 4 ? 3 : distance > mip_from * 2 ? 2 : 1;
+                                src = mips + (level == 1 ? 0 : level == 2 ? 32 * 32 : 32 * 32 + 16 * 16);
+                            }
                             int colormap_index;
                             if (fixedcolormap) {
                                 colormap_index = fixedcolormap;
@@ -1541,9 +1593,11 @@ static void flush_visplanes(int8_t *flatnum_next, int numvisplanes) {
                         position += step * (uint32_t) (flat_runs[fr].x_start - x1);
                         uint8_t *p = render_frame_buffer + y * NW_STRIDE + flat_runs[fr].x_start;
                         uint8_t *p_end = render_frame_buffer + y * NW_STRIDE + flat_runs[fr].x_end;
-                        while (p < p_end) {
-                            *p++ = colormap[flat_data[((position >> 20) & 0x0fc0) | ((position >> 10) & 63)]];
-                            position += step;
+                        switch (level) {
+                            case 0: nw_flat_run<0>(p, p_end, position, step, src, colormap); break;
+                            case 1: nw_flat_run<1>(p, p_end, position, step, src, colormap); break;
+                            case 2: nw_flat_run<2>(p, p_end, position, step, src, colormap); break;
+                            default: nw_flat_run<3>(p, p_end, position, step, src, colormap); break;
                         }
                     }
 #else

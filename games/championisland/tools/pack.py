@@ -17,8 +17,9 @@ needs goes in one blob:
   components (the Animate "this.T = {...}" data);
 - strings, quest conditions compiled to a small stack program, dialogue trees.
 
-    python3 tools/pack.py [DOODLE_DIR]
+    python3 tools/pack.py [DOODLE_DIR] [LIVE_DIR]
 """
+import hashlib
 import json
 import lzma
 import math
@@ -56,12 +57,12 @@ LIBS = [('dialog', 'B6B0DC09A20D455BAB815F8FE24BCF08'), ('hud', '0E30EA04F8F04E9
 KITSUNE = open(os.path.join(SRC, 'kitsune20.js'), encoding='utf-8').read()
 
 
-def image_table():
+def image_table(code=KITSUNE):
     """kitsune20.js maps each exported image to [sheet, x, y, w, h]."""
     named = {m.group(1): tuple(int(m.group(i)) for i in range(2, 7))
-             for m in re.finditer(r'([\w$]+)\s*=\s*\[\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\]', KITSUNE)}
+             for m in re.finditer(r'([\w$]+)\s*=\s*\[\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\]', code)}
     table = {}
-    for m in re.finditer(r'V\.set\("animate_exports/([^"]+)", (\[[^\]]*\]|[\w$]+)\)', KITSUNE):
+    for m in re.finditer(r'V\.set\("animate_exports/([^"]+)", ?(\[[^\]]*\]|[\w$]+)\)', code):
         v = m.group(2)
         table[m.group(1)] = tuple(int(x) for x in re.findall(r'-?\d+', v)) if v.startswith('[') else named[v]
     return table
@@ -77,9 +78,203 @@ for name, lid in LIBS:
             s['sheet'] = VTAB.get(man[s['img']])
     LIB[name] = d
 
+# ------------------------------------------------------------------ the doodle's update
+# The archive is the doodle's build rc6. The build Google serves now, rc7, has
+# two more side quests, each with its trophy in the Trophy House: "Crabby
+# Realtor" (a buyer for the red pagoda of Bridge Garden once its ghost is gone:
+# the rich crab of the beach, whose family moves in) and "Little Motivator" (a
+# book for the little oni of Oni Island, from the bookstore and the climbing
+# dojo's smallest owl). The Trophy Master's own quest waits for both there, and
+# her hints for the rain and coach quests are fixed. They come from tools/
+# extract.js's reading of rc7 (build/ex7, the files in LIVE): the rooms rc7
+# changed for them replace rc6's, and the people it added join rc6's regions
+# where rc7 has them. A symbol of rc7 the same as one of rc6 is rc6's; the
+# others come along as "r7.<rc7's name>", their pictures added under rc6's
+# sheet (rc7 packed its sheets again, with colours off by a unit or two: they
+# take rc6's nearest).
+LIVE = os.path.abspath(sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, 'build/live'))
+EX7 = os.path.join(ROOT, 'build/ex7')
+LIVE_ROOMS = ['gazebo', 'trophyRoom', 'bookstore']    # the red pagoda, the Trophy House, the bookstore: rc7's whole
+# rc7 redid the climbing dojo (new pictures, too big for the calculator): the
+# quest's owl, scared of heights, takes the place of rc6's, who said the same
+LIVE_SWAPS = [('climbingdojomainroom', 'nTa', 'QYa')]
+LIVE_ADDS = [('Hla', 'G2a'), ('Gia', 'H2a')]           # the little oni by Oni Island's rugby field, the crab on the beach
+LIVE_IMAGES = []                                      # (sheet, rc7's box, rc6's box): pasted once the sheets are read
+
+
+def sym_hashes(L):
+    """A digest of each symbol of a library, alike in both builds when the symbol is."""
+    syms, man = L['syms'], {k: v.split('?')[0] for k, v in L['manifest']}
+    memo = {}
+
+    def h(name, stack=()):
+        if name in memo:
+            return memo[name]
+        if name in stack or name not in syms:
+            return 'missing:' + name
+        s, sub = syms[name], stack + (name,)
+        t = s.get('t')
+        if t == 'b':
+            key = ['b', man.get(s.get('img'), s.get('img'))]
+        elif t == 's':
+            key = ['s', s.get('g')]
+        elif t == 'm':
+            T = re.sub(r'<sym:([^>]+)>', lambda m: '<sym:' + h(m.group(1), sub) + '>', json.dumps(s.get('T'), sort_keys=True))
+            key = ['m', s.get('tf'), s.get('labels'), [[dict({k: v for k, v in c.items() if k != 'pk'}, **({'sym': h(c['sym'], sub)} if 'sym' in c else {}))
+                                                        for c in fr] for fr in s.get('frames', [])], T, [a[0] for a in s.get('acts', [])]]
+        elif t == 'c':
+            key = ['c', [dict(c, sym=h(c['sym'], sub)) if 'sym' in c else c for c in s.get('kids', [])]]
+        else:
+            key = ['?', t]
+        js = re.sub(r'#[0-9A-Fa-f]{3,8}\b', lambda m: m.group(0).lower(), json.dumps(key, sort_keys=True))
+        if t == 'm' and 'triggerArea' in (s.get('T') or {}):
+            js = re.sub(r'"style": "[^"]*"', '"style": ""', js)   # an invisible area: rc7 only gave it another fill
+        memo[name] = hashlib.sha1(js.encode()).hexdigest()
+        return memo[name]
+    return {n: h(n) for n in syms}
+
+
+def graft_live():
+    if not os.path.exists(os.path.join(LIVE, 'kitsune20.js')) or not os.path.exists(os.path.join(EX7, 'dialog.json')):
+        sys.exit("pack.py: the doodle's update is missing (make live, then make data)")
+    vtab7 = image_table(open(os.path.join(LIVE, 'kitsune20.js'), encoding='utf-8').read())
+    sizes = {}
+    for lib in ('interior', 'overworld'):
+        L6 = LIB[lib]
+        L7 = json.load(open(os.path.join(EX7, dict(LIBS)[lib] + '.json')))
+        S6, S7 = L6['syms'], L7['syms']
+        man7 = {k: v.split('?')[0] for k, v in L7['manifest']}
+        h6, h7 = sym_hashes(L6), sym_hashes(L7)
+        first = {}
+        for k in sorted(S6):
+            first.setdefault(h6[k], k)
+        same = {k: first[v] for k, v in h7.items() if v in first}     # rc7 name -> rc6 name
+        # property names: Closure renamed them all over a build, so the clips both builds have pair them up
+        # (by the most pairs: Animate numbered a few instances otherwise)
+        votes = defaultdict(Counter)
+        for k7, k6 in same.items():
+            for f7, f6 in zip(S7[k7].get('frames') or [], S6[k6].get('frames') or []):
+                for c7, c6 in zip(f7, f6):
+                    if c7.get('pk') and c6.get('pk'):
+                        votes[c7['pk']][c6['pk']] += 1
+        props = {k: v.most_common(1)[0][0] for k, v in votes.items()}
+
+        def adopt(k7):
+            if k7 in same:
+                return same[k7]
+            k = 'r7.' + k7
+            if k not in S6:
+                S6[k] = json.loads(json.dumps(S7[k7]))   # (in before its children: a clip may hold itself)
+                port(S6[k])
+            return k
+
+        def port_child(c):
+            if c.get('sym'):
+                c['sym'] = adopt(c['sym'])
+            if 'pk' in c:
+                if c['pk'] in props:
+                    c['pk'] = props[c['pk']]
+                else:
+                    del c['pk']
+
+        def port(s):
+            if s.get('t') == 'b':
+                src = man7[s['img']]
+                sh, x, y, w, h = vtab7[src]
+                if src in VTAB and VTAB[src][3:] == (w, h):
+                    s['sheet'] = VTAB[src]
+                else:   # a new picture: under the sheet, in rows
+                    if sh not in sizes:
+                        W, H = Image.open(os.path.join(SRC, SHEETS[sh])).size
+                        sizes[sh] = [W, 0, H, 0]    # width, x, y, height of the row
+                    W, cx, cy, rh = sizes[sh]
+                    if cx + w > W:
+                        cx, cy, rh = 0, cy + rh, 0
+                    s['sheet'] = (sh, cx, cy, w, h)
+                    LIVE_IMAGES.append((sh, (x, y, w, h), (cx, cy)))
+                    sizes[sh] = [W, cx + w, cy, max(rh, h)]
+            for fr in s.get('frames') or []:
+                for c in fr:
+                    port_child(c)
+            for c in s.get('kids') or []:
+                port_child(c)
+            for comp in (s.get('T') or {}).values():
+                if isinstance(comp, dict):
+                    for f, v in comp.items():
+                        if isinstance(v, str) and v.startswith('<sym:'):
+                            comp[f] = '<sym:' + adopt(v[5:-1]) + '>'
+
+        def child_of(syms, parent, sym):
+            return next(c for c in syms[parent]['frames'][0] if c.get('sym') == sym)
+
+        def parent_of(syms, sym):
+            return next(k for k, s in syms.items() if len(s.get('frames') or []) == 1 and any(c.get('sym') == sym for c in s['frames'][0]))
+
+        if lib == 'interior':
+            # the rooms clip: a frame per room, labelled with its name
+            root6 = S6['mbb']
+            root7 = next(s for s in S7.values() if s.get('labels') == root6['labels'])
+
+            def room(syms, root, label):
+                f = dict(root['labels'])[label]
+                return next(c['sym'] for c in root['frames'][f] if c.get('sym') and 'map' in (syms[c['sym']].get('T') or {}))
+            for label in LIVE_ROOMS:
+                r6, r7 = room(S6, root6, label), room(S7, root7, label)
+                S6[r6] = json.loads(json.dumps(S7[r7]))
+                port(S6[r6])
+            for label, old, new in LIVE_SWAPS:
+                c = child_of(S6, room(S6, root6, label), old)
+                c['sym'] = adopt(new)
+        else:
+            map6 = next(k for k, s in S6.items() if 'map' in (s.get('T') or {}))
+            map7 = next(k for k, s in S7.items() if 'map' in (s.get('T') or {}))
+            for region, sym in LIVE_ADDS:
+                r7 = parent_of(S7, sym)
+                t6, t7 = child_of(S6, map6, region)['tr'], child_of(S7, map7, r7)['tr']
+                assert abs(t6['x'] - t7['x']) < .5 and abs(t6['y'] - t7['y']) < .5, (region, r7)   # the same place on the island
+                c = json.loads(json.dumps(child_of(S7, r7, sym)))
+                port_child(c)
+                kids = S6[region]['frames'][0]
+                c['i'] = max(k['i'] for k in kids) + 1
+                kids.append(c)
+
+
+graft_live()
+
 msg_text = open(os.path.join(SRC, 'messages.en-GB.nocache.json'), encoding='utf-8').read()
 MESSAGES = json.loads(msg_text[msg_text.find('{'):])
 DIALOG = json.load(open(os.path.join(EX, 'dialog.json')))
+# the update's dialogue: rc7's trees for the two quests and for the rain quest's
+# hints it changed; rc6's bookkeeper and smallest owl are the quest's now
+_msg7 = open(os.path.join(LIVE, 'messages.en-GB.nocache.json'), encoding='utf-8').read()
+MESSAGES7 = json.loads(_msg7[_msg7.find('{'):])
+LIVE_TREES = [g for g in json.load(open(os.path.join(EX7, 'dialog.json')))
+              if g[0]['V'] in ('questDreamHome', 'questLittleOni') or (g[0]['V'], g[0]['nodeName']) in (('questRain', 'foundTrophy'), ('questRain', 'ticketTrophy'))]
+_gone = {(g[0]['V'], g[0]['nodeName']) for g in LIVE_TREES} | {('bookKeeper', 'bookKeepr'), ('townspeople', 'snowOwl7')}
+
+
+def tree_keys(g):
+    """The keys of a tree's texts among the translations."""
+    return [n['V'] + n['nodeName'] + s for n in g for s in [''] + ['opt%d' % k for k in range(len(n.get('U', [])))]]
+
+
+for g in [g for g in DIALOG if (g[0]['V'], g[0]['nodeName']) in _gone]:
+    for k in tree_keys(g):
+        MESSAGES.pop(k, None)
+_at = {(g[0]['V'], g[0]['nodeName']): i for i, g in enumerate(DIALOG)}
+for g in LIVE_TREES:
+    for n in g:   # the value a line sets ("Dd" in rc7, Closure's name for it again)
+        n['tags'] = {('W' if k == 'W' else 'zd'): v for k, v in n.get('tags', {}).items()}
+    for k in tree_keys(g):
+        if k in MESSAGES7:
+            MESSAGES[k] = MESSAGES7[k]
+    key = (g[0]['V'], g[0]['nodeName'])
+    if key in _at:
+        DIALOG[_at.pop(key)] = g    # in its place
+    else:
+        DIALOG.append(g)
+_drop = {i for key, i in _at.items() if key in _gone}    # rc6's trees rc7 has no more
+DIALOG = [g for i, g in enumerate(DIALOG) if i not in _drop]
 # the calculator's keys in the instructions: OK acts, Back cancels
 KEYS = [('Spacebar', 'OK'), ('Space ', 'OK '), ('space', 'OK'), ('backspace', 'Back'), ('Direction keys', 'Arrow keys'),
         ('Click on the red gate', 'Go to the red gate'), ('by clicking the sport icons on the main menu', 'by choosing a sport on the map')]
@@ -148,6 +343,34 @@ for i, f in enumerate(SHEETS):
     pal = (im.getpalette() + [0] * 768)[:768]
     sheet_alpha[i] = a
     pal_rgb[i] = [(pal[3 * j], pal[3 * j + 1], pal[3 * j + 2]) for j in range(256)]
+
+# the update's new pictures, from rc7's sheets in rc6's colours, under rc6's sheet
+_near = {}
+for sh, (x, y, w, h), (cx, cy) in LIVE_IMAGES:
+    if sh not in _near:
+        im = Image.open(os.path.join(LIVE, SHEETS[sh]))
+        a7 = np.full(256, 255, np.uint8)
+        tr = im.info.get('transparency')
+        if isinstance(tr, bytes):
+            a7[:len(tr)] = np.frombuffer(tr, np.uint8)
+        elif isinstance(tr, int):
+            a7[tr] = 0
+        p7 = (im.getpalette() + [0] * 768)[:768]
+        clear = int(np.argmin(sheet_alpha[sh]))
+        near = np.zeros(256, np.uint8)
+        for j in range(256):
+            if a7[j] == 0:
+                near[j] = clear
+                continue
+            same_a = [k for k in range(256) if sheet_alpha[sh][k] == a7[j]] or range(256)
+            near[j] = min(same_a, key=lambda k: sum(abs(p7[3 * j + c] - pal_rgb[sh][k][c]) for c in range(3)) +
+                          abs(int(a7[j]) - int(sheet_alpha[sh][k])))
+        _near[sh] = (np.array(im), near, clear)
+    px7, near, clear = _near[sh]
+    if sheet_px[sh].shape[0] < cy + h:
+        grow = np.full((cy + h - sheet_px[sh].shape[0], sheet_px[sh].shape[1]), clear, np.uint8)
+        sheet_px[sh] = np.vstack([sheet_px[sh], grow])
+    sheet_px[sh][cy:cy + h, cx:cx + w] = near[px7[y:y + h, x:x + w]]
 
 # ------------------------------------------------------------------ transforms
 def matrix(tr):
@@ -988,7 +1211,7 @@ def enc_actions(acts):
     out = []
     for t, src in acts:
         body = ' '.join(src.split())
-        body = re.sub(r'this\.T = \{.*?\};?', '', body)
+        body = re.sub(r'this\.T ?= ?\{.*?\};?', '', body)
         for m in re.finditer(r'this\.parent\.dispatchEvent\("([^"]*)"\)|this\.dispatchEvent\("([^"]*)"\)|this\.stop\(\)|this\.play\(\)', body):
             if m.group(1) is not None:
                 out.append((t, ACT_DISPATCH_PARENT, sid(m.group(1))))

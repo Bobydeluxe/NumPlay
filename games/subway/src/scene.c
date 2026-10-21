@@ -4,7 +4,9 @@
  * across the row the ground goes by evenly. Its colours across the yard are the game's own track seen from above
  * (data.c: the ballast, the sleepers, the rails), kept in tables, sharp ones near and blurred ones far (each half as
  * wide as the one before), and a row only reads its table at a steady step: no flicker on the far rails. The
- * sleepers come one row in so many: rows that see part of one get a table with them mixed in.
+ * sleepers come one row in so many: rows that see part of one get a table with them mixed in. Like the game's track,
+ * the ground hides what is below it: the city's walls and floors go on down under the tracks (the game never shows
+ * that part), so each row leaves its depth where the tracks are, and the polygons are drawn only above it.
  *
  * The city, the trains and the barriers are the game's models baked into a few flat faces with their detail
  * painted on (tools/bake.py): a stretch of city (SEG) at a time, its left and right sides, or a section (the
@@ -19,6 +21,7 @@
 #define SLEEPER (15 * U)           /* from one sleeper to the next */
 #define SLEEPER_Z0 (5.6f * U)      /* where one starts in that */
 #define SLEEPER_W (4.4f * U)
+#define TRACKS (30 * U)            /* the three tracks reach this far to each side (the table's ballast) */
 
 enum { G_NONE, G_SLEEPER, G_MIX, G_KINDS };
 static uint16_t ground[G_KINDS][GROUND_W * 2];   /* levels one after the other */
@@ -28,12 +31,14 @@ static uint16_t sky[SCREEN_H];
 static float detail = 1;
 static int horizon;                /* the first row of ground */
 
-/* each row of ground: its table, where it starts and its step (16.16), its haze */
+/* each row of ground: its table (its level), where it starts and its step (16.16), its haze; the tracks' pixels
+ * and depth */
 typedef struct {
   const uint16_t *lut;
   int32_t u, du;
-  uint16_t n;
-  uint8_t haze;
+  int16_t x0, x1;
+  uint16_t depth;
+  uint8_t level, haze;
 } GroundRow;
 static GroundRow rows[SCREEN_H];
 
@@ -127,11 +132,16 @@ void scene_camera(float x, float y, float z, float pitch, float f, float cy) {
     while (step > 1.4f && l < LEVELS - 1) step *= 0.5f, l++;
     float scale = (float)(32 >> l);
     g->lut = ground[kind] + level_at[l];
-    g->n = (uint16_t)(GROUND_W >> l);
+    g->level = (uint8_t)l;
     g->u = (int32_t)(((cam.x + (0.5f - cam.cx) * zc / cam.f) - GROUND_X0) * scale * 65536);
     g->du = (int32_t)(zc / cam.f * scale * 65536);
     float h = (zc - r_haze0) / (r_haze1 - r_haze0);
     g->haze = (uint8_t)(h <= 0 ? 0 : h >= 1 ? 240 : (int)(h * 240));
+    /* the pixels whose middles see the tracks */
+    float px = cam.f / zc, xa = cam.cx - 0.5f + (-TRACKS - cam.x) * px, xb = cam.cx - 0.5f + (TRACKS - cam.x) * px;
+    g->x0 = (int16_t)(xa <= 0 ? 0 : xa >= SCREEN_W ? SCREEN_W : (int)xa + ((float)(int)xa < xa));
+    g->x1 = (int16_t)(xb < 0 ? 0 : xb >= SCREEN_W - 1 ? SCREEN_W : (int)xb + 1);
+    g->depth = r_floor_depth(zc);
   }
 }
 
@@ -169,7 +179,7 @@ void scene_background(void) {
     }
     const GroundRow *g = &rows[y];
     const uint16_t *lut = g->lut;
-    uint32_t n = g->n;
+    uint32_t n = GROUND_W >> g->level;
     if (g->haze) {
       int t = (g->haze + 4) >> 3;
       if (lut != hazed_lut || t != hazed_t) {
@@ -192,6 +202,7 @@ void scene_background(void) {
     u += du * xa;
     for (; x < xb; x++, u += du) p[x] = lut[(uint32_t)u >> 16];
     for (; x < SCREEN_W; x++) p[x] = right;
+    if (g->x0 < g->x1) r_band_depth(y, g->x0, g->x1, g->depth);
   }
 }
 

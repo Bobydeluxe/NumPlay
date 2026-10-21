@@ -27,7 +27,7 @@ python3 NumPlay/tools/setup.py
 | --- | --- |
 | **macOS** (Apple silicon or Intel) | If `make` is missing, run `xcode-select --install` first. Then, in each new terminal: `source ~/.numplay/env.sh` |
 | **Linux** | Same as macOS: `source ~/.numplay/env.sh` |
-| **Windows** | `tools/setup.py` prints the PowerShell line to use. `python tools/build_windows.py` builds NumPlay natively (it gets GNU make for you), or use WSL |
+| **Windows** | `tools/setup.py` prints the PowerShell line to use. `python tools/build.py` builds NumPlay natively (it gets GNU make for you), or use WSL |
 
 ## 2. Start a game
 
@@ -54,7 +54,7 @@ python3 tools/emu.py games/mygame/output/mygame.nwa --ms 6000 --keys "1500-1600:
 To play it with your mouse and keyboard instead, open it in the live emulator, a calculator in a window (made by LilyTheCuteCatgirl). With `--live` it builds your game again each time you save a file and reloads it:
 
 ```bash
-python3 tools/emu_live.py games/mygame/output/mygame.nwa
+python3 tools/emulator.py games/mygame/output/mygame.nwa
 ```
 
 `tools/emu.py`'s `--keys` holds keys over time ranges in milliseconds (`ok`, `back`, `left`, `up`, `exe`, `home`, `1`...`9`, `shift`, `alpha`...). `--gif 0-5000` records a GIF, `--model n0110` emulates the slower N0110 and N0115 (if your game is smooth there, it's smooth everywhere), `--system upsilon` emulates Upsilon. It runs at about the speed of an N0110.
@@ -88,7 +88,8 @@ And the tools, all in `tools/`:
 | `setup.py` | Gets the compiler, nwlink and the Python packages |
 | `new_game.py` | Starts a game from the template |
 | `emu.py` | Runs a `.nwa` in an emulator: pictures, GIFs, scripted keys, files kept between runs, profiling |
-| `emu_live.py` | The emulator in a window: click the keys or use your keyboard; `--live` rebuilds when you save (`watch.py` on macOS and Linux, `build_windows.py` on Windows) |
+| `emulator.py` | The emulator in a window: click the keys or use your keyboard; `--live` rebuilds when you save, with `build.py` |
+| `build.py` | Builds NumPlay on macOS, Linux and Windows and puts the finished apps in `build/compiled/`; `--game ID` builds one game, `--watch` builds again when you save |
 | `icon.py` | Makes the 55 x 56 app icon from any picture, with the rounded corners every NumPlay icon has |
 | `record.py` | Makes GIFs from the emulator's frames |
 | `sizes.py` | How much flash and RAM each game takes inside NumPlay |

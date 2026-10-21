@@ -25,7 +25,7 @@ git clone https://github.com/Mason363/NumPlay.git
 python3 NumPlay/tools/setup.py
 ```
 
-`tools/setup.py` gets the ARM compiler, nwlink and the Python packages into `~/.numplay` and tells you the one line that puts them on your PATH (`source ~/.numplay/env.sh` on macOS and Linux). On macOS, run `xcode-select --install` first if `make` is missing. Rust is needed only for Tetris: [rustup.rs](https://rustup.rs), then `rustup target add thumbv7em-none-eabihf`. On Windows, `python tools/build_windows.py` builds NumPlay natively (`--doctor` checks your setup), or use WSL.
+`tools/setup.py` gets the ARM compiler, nwlink and the Python packages into `~/.numplay` and tells you the one line that puts them on your PATH (`source ~/.numplay/env.sh` on macOS and Linux). On macOS, run `xcode-select --install` first if `make` is missing. Rust is needed only for Tetris: [rustup.rs](https://rustup.rs), then `rustup target add thumbv7em-none-eabihf`. On Windows, `python tools/build.py` builds NumPlay natively (`--doctor` checks your setup), or use WSL.
 
 Then:
 
@@ -38,7 +38,8 @@ Then:
 | `make -C games/<game> test` | That game's tests on your computer (most games have them) |
 | `python3 tests/test_games.py build/apps` | Plays every app in the emulator and checks its saves |
 | `python3 tools/emu.py app.nwa --ms 5000 --shots 2000 --out shots` | Runs any `.nwa` in the emulator and takes pictures |
-| `python3 tools/emu_live.py app.nwa` | The emulator in a window, to play with the mouse and keyboard; `--live` rebuilds as you save |
+| `python3 tools/emulator.py app.nwa` | The emulator in a window, to play with the mouse and keyboard; `--live` rebuilds as you save |
+| `python3 tools/build.py` | Builds everything and puts the finished apps in `build/compiled/` (`--game ID` for one game, `--watch` to build again when you save) |
 
 ## How the code is laid out
 

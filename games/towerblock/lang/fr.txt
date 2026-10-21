@@ -1,0 +1,16 @@
+# Tower Blocks in French: the English text as in the source, a tab, the translation (see tools/lang.py).
+Resume	Reprendre
+New game	Nouvelle partie
+How to play	Comment jouer
+Quit	Quitter
+Back  menu	Retour  menu
+Start	Jouer
+Press OK to go on	Appuie sur OK pour continuer
+Press OK to place the block	Appuie sur OK pour poser le bloc
+Game Over	Partie terminée
+You did great, you're the best.	Bravo, tu es le meilleur.
+Press OK to start again	Appuie sur OK pour recommencer
+Best 	Record 
+Paused	Pause
+Press OK to drop the moving block on the tower. What hangs over the edge falls off, so the blocks get smaller. Land it just right to keep it whole. Miss the tower and it's over.	Appuie sur OK pour lâcher le bloc sur la tour. Ce qui dépasse tombe, et les blocs rétrécissent. Pose-le pile dessus pour le garder entier. Rate la tour et c'est fini.
+Play	Jouer

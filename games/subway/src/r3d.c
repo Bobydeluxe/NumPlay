@@ -581,6 +581,17 @@ static void raster(const Poly *q) {
   }
 }
 
+uint16_t r_floor_depth(float z) {
+  float d = ZK / z;
+  d -= d * (1.0f / 256);   /* (a hair farther: a shadow lying on it is drawn, what is under it is not) */
+  return d >= 65535 ? 65535 : d <= 0 ? 0 : (uint16_t)d;
+}
+
+void r_band_depth(int y, int x0, int x1, uint16_t d) {
+  uint16_t *zb = zbuf + (y - r_y0) * SCREEN_W;
+  for (int x = x0; x < x1; x++) zb[x] = d;
+}
+
 void r_render(r_band_fn bg, r_band_fn overlay) {
   /* the see-through polygons after the others, in the order they came */
   if (nalpha) {

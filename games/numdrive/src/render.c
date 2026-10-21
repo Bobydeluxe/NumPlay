@@ -1,4 +1,5 @@
 /* Strip-based z-buffered renderer for Fancade voxel objects (orthographic camera). */
+#pragma GCC optimize ("O2")  /* (drawn every frame: fast, while the rest of the game is built small) */
 #include <string.h>
 #include <math.h>
 #ifdef HOST

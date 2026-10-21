@@ -71,10 +71,14 @@ jobs:
           make -C games/hillclimb host test
           make -C games/leveldevil host test
           make -C games/cookieclicker host test
+          make -C games/jetpackjoyride host test
           make -C games/invaders host test
           make -C games/sudoku host test
           make -C games/uttt host test
           make -C games/sokoban host test
+          make -C games/flappydunk host test
+          make -C games/towerblock host test
+          make -C games/doodlejump host test
           make -C games/supermariobros check test replay fidelity NWLINK=nwlink
           python3 games/supermariobros/tools/assets.py --check
           python3 games/supermariobros/tests/arm.py --nwlink nwlink

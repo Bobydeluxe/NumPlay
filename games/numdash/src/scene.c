@@ -1,3 +1,4 @@
+#pragma GCC optimize ("O2")  /* (drawn every frame: fast, while the rest of the game is built small) */
 #include "scene.h"
 #include "fx.h"
 #include <math.h>

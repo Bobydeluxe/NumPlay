@@ -468,6 +468,19 @@ Run to the door. These are the game's 80 rooms in its order: sixteen worlds of f
 
 <br clear="right">
 
+## Jetpack Joyride
+
+<img src="../games/jetpackjoyride/docs/shot.png" width="320" align="right" alt="Jetpack Joyride">
+
+| Key | What it does |
+| --- | --- |
+| **OK** (or **EXE**, **Up**), held | Fly; let go to fall |
+| **OK** on a vehicle | What the vehicle does: jump, flap, flip gravity, teleport |
+| **Back** | Pause (with Retry, How to play and Quit) |
+
+Barry runs through the lab by himself: hold OK to fire the jetpack and fly, let go to drop. Keep clear of the zappers, the lasers that charge up across the screen and the missiles that warn, lock on and fire. Grab coins, and the vehicle boxes for a ride that takes one hit. Spin tokens play the Final Spin when the run ends, where a Second Chance brings it back. Your best distance and coins are saved.
+
+<br clear="right">
 ## Portal Returns
 
 <img src="media/portal.gif" width="320" align="right" alt="Portal Returns: falling through a portal and flying across a test chamber">
@@ -516,6 +529,20 @@ Chrome's game when you're offline, as Chrome plays it. Run as far as you can: ju
 
 <br clear="right">
 
+## Doodle Jump
+
+<img src="../games/doodlejump/docs/shot.png" width="320" align="right" alt="Doodle Jump">
+
+| Key | What it does |
+| --- | --- |
+| **Left, Right** (or **4**, **6**) | Steer the doodler |
+| **OK** | Shoot |
+| **Back** | Menu (with How to play and Quit) |
+
+He jumps by himself whenever he lands: steer him from platform to platform, as high as you can. Off one side of the page he comes back on the other. Green platforms stay, blue ones slide, brown ones break under him, white ones are gone after one jump and yellow ones blow up. Springs, trampolines, propeller hats and jetpacks throw him higher. Shoot monsters or land on their heads, and keep away from black holes; falling off the bottom ends the climb. Your climb and high score are saved.
+
+<br clear="right">
+
 ## Chess
 
 <img src="media/chess.gif" width="320" align="right" alt="Chess against a bot">
@@ -541,6 +568,32 @@ Chrome's game when you're offline, as Chrome plays it. Run as far as you can: ju
 | **Back** | Pause menu (with Quit game) |
 
 **Classic** plays like the original. **Custom** brings All the Apps' extras from Settings: speed, pipe density, gap size, moving pipes, jump strength, and events like wind gusts, gravity changes and narrow gaps. Medals at 10, 20, 30 and 40.
+
+<br clear="right">
+
+## Flappy Dunk
+
+<img src="../games/flappydunk/docs/shot.png" width="320" align="right" alt="Flappy Dunk">
+
+| Key | What it does |
+| --- | --- |
+| **OK** (or **EXE**, **Up**) | Flap |
+| **Back** | Menu (with Balls, How to play and Quit) |
+
+Each press flaps the wings once and the ball falls in between: drop it down through every hoop, as a missed hoop ends the run. The floor and the ceiling bounce it back, and the rims stop it dead. Going in without touching the rim is a swish: a basket is worth 1, a swish 2, and every swish in a row one more, with the ball on fire from the second. Six balls unlock with the original's goals. Your run, best score and balls are saved.
+
+<br clear="right">
+
+## Tower Blocks
+
+<img src="../games/towerblock/docs/shot.png" width="320" align="right" alt="Tower Blocks">
+
+| Key | What it does |
+| --- | --- |
+| **OK** (or **EXE**) | Drop the block |
+| **Back** | Menu (with How to play and Quit) |
+
+Each block slides in from one side, along one edge of the tower and then the other, a little faster each time. Drop it on the block below: the part that hangs over falls away, so the blocks get smaller, and landing it just right keeps it whole. Miss the tower and the game is over. Your tower and best score are saved.
 
 <br clear="right">
 

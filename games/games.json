@@ -210,6 +210,24 @@
     "repo": "https://github.com/Mason363/NumPlay/tree/main/games/dinorun"
   },
   {
+    "id": "doodlejump",
+    "title": "Doodle Jump",
+    "tagline": "Bounce as high as you can",
+    "credit": "Based on Doodle Jump by Lima Sky",
+    "top": "0xC8D84A",
+    "bottom": "0x4A7A22",
+    "accent": "0xF7F7F4",
+    "colors": 16,
+    "records": [
+      "doodlejump.sav"
+    ],
+    "shots": [
+      "docs/shot.png"
+    ],
+    "app": "DoodleJump.nwa",
+    "repo": "https://github.com/Mason363/NumPlay/tree/main/games/doodlejump"
+  },
+  {
     "id": "chess",
     "title": "Chess",
     "tagline": "Bots, puzzles, 2 players",
@@ -241,6 +259,42 @@
     ],
     "app": "FlappyBird.nwa",
     "repo": "https://github.com/Mason363/NumPlay/tree/main/games/flappybird"
+  },
+  {
+    "id": "flappydunk",
+    "title": "Flappy Dunk",
+    "tagline": "Flap the ball down through every hoop",
+    "credit": "Based on Flappy Dunk by Voodoo",
+    "top": "0xFFA53D",
+    "bottom": "0xB8400F",
+    "accent": "0xFFE08A",
+    "colors": 16,
+    "records": [
+      "flappydunk.sav"
+    ],
+    "shots": [
+      "docs/shot.png"
+    ],
+    "app": "FlappyDunk.nwa",
+    "repo": "https://github.com/Mason363/NumPlay/tree/main/games/flappydunk"
+  },
+  {
+    "id": "towerblock",
+    "title": "Tower Blocks",
+    "tagline": "Stack the blocks as high as you can",
+    "credit": "Based on Tower Blocks by Steve Gardner",
+    "top": "0xD8C7E8",
+    "bottom": "0x6E7BA8",
+    "accent": "0xF2D27A",
+    "colors": 16,
+    "records": [
+      "towerblocks.sav"
+    ],
+    "shots": [
+      "docs/shot.png"
+    ],
+    "app": "TowerBlocks.nwa",
+    "repo": "https://github.com/Mason363/NumPlay/tree/main/games/towerblock"
   },
   {
     "id": "pacman",

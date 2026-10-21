@@ -4,7 +4,8 @@
 #   make host       build/play: the game on a computer, for tests and screenshots
 #   make test       the game played on a computer (tests/check.py, with the sanitizers)
 #   make media      the pictures of docs/ and the animations of the repository's docs/media (tools/media.py)
-#   make data       src/doom1.whx from the shareware DOOM1.WAD (tools/fetch.py downloads it; WAD=its path)
+#   make data       src/doom1.whx and src/doom1.mip from the shareware DOOM1.WAD (tools/fetch.py downloads it;
+#                   WAD=its path)
 #   make WAD=path/to/doom2.wad [PWAD="maps.wad ..."] [MAPS="MAP01-MAP04"]
 #                   output/doom.nwa from another WAD (the README's "Doom from your own WAD"); host, test and check too
 Q ?= @
@@ -19,11 +20,13 @@ SIZE = $(BIN)arm-none-eabi-size
 BUILD_DIR = output
 WAD ?=
 
-# the packed WAD: the shareware one, or one made from WAD= (below)
+# the packed WAD: the shareware one, or one made from WAD= (below); and its flats made smaller (tools/mips.py)
 WHX = src/doom1.whx
+MIP = src/doom1.mip
 ifneq ($(WAD),)
 ifeq ($(filter data,$(MAKECMDGOALS)),)
 WHX = build/wad/doom.whx
+MIP = build/wad/doom.mip
 endif
 endif
 
@@ -71,8 +74,8 @@ $(BUILD_DIR)/obj/%.o: src/%.c $(HEADERS)
 $(BUILD_DIR)/obj/pd_render.o: src/pd_render.cpp $(HEADERS)
 	@mkdir -p $(@D)
 	$(Q) $(CXX) $(CXXFLAGS) -Wall -Wextra $(ENGINE_W) -c $< -o $@
-$(BUILD_DIR)/data.o: src/nw/data.S $(WHX) $(BUILD_DIR)/whx | $(BUILD_DIR)
-	$(Q) $(CC) -c -DDOOM_WHX='"$(WHX)"' $< -o $@
+$(BUILD_DIR)/data.o: src/nw/data.S $(WHX) $(MIP) $(BUILD_DIR)/whx | $(BUILD_DIR)
+	$(Q) $(CC) -c -DDOOM_WHX='"$(WHX)"' -DDOOM_MIP='"$(MIP)"' $< -o $@
 $(BUILD_DIR)/whx: FORCE | $(BUILD_DIR)
 	@echo '$(WHX)' | cmp -s - $@ || echo '$(WHX)' > $@
 
@@ -104,9 +107,9 @@ build/host/pd_render.o: src/pd_render.cpp $(HEADERS)
 build/host/play.o: tests/play.c $(HEADERS)
 	@mkdir -p $(@D)
 	$(Q) cc -std=gnu11 $(HOST_FLAGS) $(HOST_SAN) -Wall -Wextra -c $< -o $@
-build/host/data.o: src/nw/data.S $(WHX) build/host/whx
+build/host/data.o: src/nw/data.S $(WHX) $(MIP) build/host/whx
 	@mkdir -p $(@D)
-	$(Q) cc -c -DDOOM_WHX='"$(WHX)"' $< -o $@
+	$(Q) cc -c -DDOOM_WHX='"$(WHX)"' -DDOOM_MIP='"$(MIP)"' $< -o $@
 build/host/whx: FORCE
 	@mkdir -p $(@D)
 	@echo '$(WHX)' | cmp -s - $@ || echo '$(WHX)' > $@
@@ -140,6 +143,7 @@ $(WHD_GEN): $(WHD_GEN_OBJ)
 data: $(WHD_GEN)
 	@test -n "$(WAD)" || { echo "make data WAD=<the shareware DOOM1.WAD> (python3 tools/fetch.py downloads it)"; exit 1; }
 	$(WHD_GEN) -silent -lossless $(WAD) src/doom1.whx
+	python3 tools/mips.py $(WAD) src/doom1.mip
 
 # another WAD: its chosen maps and what they show (tools/pick.py), packed as the calculator reads it
 PICKED = build/wad/$(shell echo '$(notdir $(WAD))' | tr A-Z a-z)
@@ -151,6 +155,8 @@ build/wad/doom.whx: build/wad/args $(WHD_GEN) tools/pick.py $(WAD) $(PWAD)
 	$(Q) $(WHD_GEN) -silent -lossless -drop-unused $(PICKED) $@ > build/wad/whd_gen.log || \
 	  { tail -3 build/wad/whd_gen.log; rm -f $@; exit 1; }
 	@echo "WHX     $@: $$(wc -c < $@) bytes"
+build/wad/doom.mip: build/wad/doom.whx tools/mips.py
+	python3 tools/mips.py $(PICKED) $@
 .PHONY: FORCE
 
 clean:

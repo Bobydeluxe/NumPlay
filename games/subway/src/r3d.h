@@ -4,7 +4,8 @@
  * things look round) and textured ones (a picture laid on, in perspective for big faces like a train's
  * side). Each frame they are moved in front of the camera, cut at the edges of the view, projected and
  * kept in a list; then the screen is drawn in bands of BAND_H rows, each one its background (sky and the
- * ground, scene.c), the polygons that cross it with a depth buffer, the see-through ones after them, and
+ * ground, scene.c, which leaves the ground's depth where it hides what is below it), the polygons that
+ * cross it with a depth buffer, the see-through ones after them, and
  * what is drawn flat over the picture (ui). The whole screen never has to fit in RAM: a band and its
  * depths do. */
 #ifndef SS_R3D_H
@@ -117,4 +118,9 @@ __attribute__((always_inline)) static inline uint16_t r_mix565(uint16_t a, uint1
  * overlay draws flat things over the band (both may be NULL) */
 typedef void (*r_band_fn)(void);
 void r_render(r_band_fn bg, r_band_fn overlay);
+/* for bg: a surface it draws hides what is behind it. Row y of the band, pixels [x0, x1), lies at depth d:
+ * r_floor_depth(z) for a floor seen at z metres ahead of the camera (a hair farther, so that what lies on it,
+ * a shadow, is still drawn) */
+uint16_t r_floor_depth(float z);
+void r_band_depth(int y, int x0, int x1, uint16_t d);
 #endif

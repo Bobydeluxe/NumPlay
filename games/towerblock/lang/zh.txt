@@ -1,0 +1,16 @@
+# Tower Blocks in Chinese: the English text as in the source, a tab, the translation (see tools/lang.py).
+Resume	继续
+New game	新游戏
+How to play	玩法
+Quit	退出
+Back  menu	返回  菜单
+Start	开始
+Press OK to go on	按 OK 继续
+Press OK to place the block	按 OK 放下方块
+Game Over	游戏结束
+You did great, you're the best.	干得好，你是最棒的。
+Press OK to start again	按 OK 重新开始
+Best 	最高 
+Paused	暂停
+Press OK to drop the moving block on the tower. What hangs over the edge falls off, so the blocks get smaller. Land it just right to keep it whole. Miss the tower and it's over.	按 OK 把移动的方块放到塔上。超出边缘的部分会掉落，方块就会变小。对得刚好就能保持完整。没放到塔上就结束了。
+Play	开始

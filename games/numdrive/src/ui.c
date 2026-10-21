@@ -1,4 +1,5 @@
 /* In-game HUD, photo cards (pause / win / lose) and the level list, drawn like Fancade's UI. */
+#pragma GCC optimize ("O2")  /* (drawn every frame: fast, while the rest of the game is built small) */
 #include <math.h>
 #include <string.h>
 #include "ui.h"

@@ -239,8 +239,14 @@ static void hockey_step(void) {
   if (phase) return;
   for (int i = 0; i < ms; i++) {
     qx += qvx / 1000, qy += qvy / 1000;
-    if (qy < RY0 + QR || qy > RY1 - QR) qy -= qvy / 500, qvy *= -0.9f;
-    if ((qy < GY0 || qy > GY1) && (qx < RX0 + QR || qx > RX1 - QR)) qx -= qvx / 500, qvx *= -0.9f;
+    /* the boards: back on their edge, and off them only when moving into them (a mallet can push the
+       puck into a board, and a slow puck flipped back and forth there stayed in it) */
+    if (qy < RY0 + QR) qy = RY0 + QR, qvy = qvy < 0 ? -qvy * 0.9f : qvy;
+    else if (qy > RY1 - QR) qy = RY1 - QR, qvy = qvy > 0 ? -qvy * 0.9f : qvy;
+    if (qy < GY0 || qy > GY1) {
+      if (qx < RX0 + QR) qx = RX0 + QR, qvx = qvx < 0 ? -qvx * 0.9f : qvx;
+      else if (qx > RX1 - QR) qx = RX1 - QR, qvx = qvx > 0 ? -qvx * 0.9f : qvx;
+    }
     if (qx < RX0 - QR || qx > RX1 + QR) {
       point(qx < 160);
       return;

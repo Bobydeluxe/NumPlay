@@ -8,6 +8,7 @@
  * In a container a cursor jumps between slots with the arrows: OK is the
  * left click, EXE the right click, shift + OK the shift click, a digit swaps
  * with that hotbar slot; var or Back closes. */
+#pragma GCC optimize ("O2")  /* (drawn every frame: fast, while the rest of the game is built small) */
 #include <math.h>
 #include <stdlib.h>
 #include "nb.h"

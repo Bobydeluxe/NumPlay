@@ -9,6 +9,7 @@
  * draws them; glass, plants and water let the ray go on through their
  * see-through texels. The sky has its gradient, the sun or the moon, and
  * Minecraft's flat clouds at y = 128. */
+#pragma GCC optimize ("O2")  /* (drawn every frame: fast, while the rest of the game is built small) */
 #include <math.h>
 #include "nb.h"
 
